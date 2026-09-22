@@ -1,0 +1,3257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d3a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Scierie">
+  <meta name="description" content="Registre des ventes de bois de la scierie">
+  <title>Scierie · Ventes</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@600;700;800&display=swap">
+  <style>
+/* =====================================================================
+   SCIERIE : design
+   Sapin profond + bois fraîchement coupé, verre dépoli sur photo de forêt.
+   Titres : Big Shoulders Display (marquage industriel du bois)
+   Texte  : Atkinson Hyperlegible (conçue pour la lisibilité)
+   ===================================================================== */
+:root {
+  --pine: #1d3a2e;
+  --pine-2: #27503f;
+  --moss: #56794a;
+  --fern: #e7eee2;
+  --sapwood: #e7c98f;
+  --heartwood: #b7773f;
+  --bark: #5a3f2c;
+  --ink: #16241c;
+  --ink-2: #3f5147;
+  --ink-3: #66776c;
+  --line: rgba(29, 58, 46, .15);
+  --glass: rgba(242, 246, 239, .84);
+  --glass-2: rgba(250, 252, 248, .95);
+  --ok: #2e7a4b;
+  --warn: #a8661a;
+  --danger: #a8352b;
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-xl: 26px; --r-lg: 20px; --r-md: 14px;
+  --shadow: 0 1px 1px rgba(16, 36, 28, .05), 0 12px 30px -14px rgba(16, 36, 28, .35);
+  --st: env(safe-area-inset-top, 0px);
+  --sb: env(safe-area-inset-bottom, 0px);
+  /* couleurs qui changent en mode sombre */
+  --title: #1d3a2e;
+  --surface: #ffffff;
+  --bark-bg: #5a3f2c;
+  --wood-surface: #f3e4c4;
+  --topbar-bg: rgba(238, 243, 234, .86);
+  --card-border: rgba(255, 255, 255, .6);
+  --pending-bg: rgba(255, 248, 235, .96);
+  --title-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+  --body-bg: #6f8f69;
+  --danger-bg: #a8352b;
+  --stamp-inner: rgba(29, 58, 46, .55);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d3a2e' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --bg-overlay: linear-gradient(180deg, rgba(236, 242, 232, .62) 0%, rgba(236, 242, 232, .22) 30%, rgba(236, 242, 232, .38) 70%, rgba(236, 242, 232, .75) 100%);
+  --bg-fallback: radial-gradient(120% 70% at 15% 0%, #e2ebd6 0%, rgba(226, 235, 214, 0) 60%),
+    radial-gradient(90% 60% at 100% 100%, rgba(231, 201, 143, .55) 0%, rgba(231, 201, 143, 0) 60%),
+    linear-gradient(165deg, #a9c19b 0%, #6f8f69 45%, #4b6a4d 100%);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100dvh;
+  font: 400 17px/1.45 var(--f-body); color: var(--ink);
+  background: var(--body-bg);
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+h1, h2, h3 { margin: 0; font-family: var(--f-display); font-weight: 700; line-height: 1.05; letter-spacing: .01em; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--heartwood); outline-offset: 2px; }
+.ico { width: 22px; height: 22px; flex: none; }
+
+/* ---------- Fond : photo (assets/fond.jpg) ou dégradé forêt de secours ---------- */
+.bg {
+  position: fixed; inset: 0; z-index: -1;
+  background: var(--bg-overlay), url("fond.jpg") center 40% / cover no-repeat, var(--bg-fallback);
+}
+
+#app { max-width: 620px; margin: 0 auto; padding: calc(var(--st) + 10px) 16px calc(var(--sb) + 32px); }
+.view { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 960px) { #app { max-width: 1060px; padding-inline: 32px; } }
+
+/* ---------- Barre du haut ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 10px;
+  margin: calc(-1 * (var(--st) + 10px)) -16px 0;
+  padding: calc(var(--st) + 10px) 16px 10px;
+  background: var(--topbar-bg);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+@media (min-width: 960px) { .topbar { margin-inline: -32px; padding-inline: 32px; } }
+.topbar-title { flex: 1; min-width: 0; font-size: 30px; color: var(--title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.round-btn {
+  width: 48px; height: 48px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line); background: var(--glass-2); color: var(--title);
+}
+.round-btn .ico { width: 24px; height: 24px; }
+
+.net {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  padding: 5px 10px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; white-space: nowrap; color: var(--ink-2);
+  background: var(--glass-2); border: 1px solid var(--line);
+}
+.net:empty { display: none; }
+.net i { width: 8px; height: 8px; border-radius: 50%; background: #c9a227; }
+.net-live i { background: #3fa35f; box-shadow: 0 0 0 3px rgba(63, 163, 95, .22); }
+.net-off { color: var(--warn); }
+.net-off i { background: var(--warn); }
+.net-pending { margin-left: 4px; padding-left: 7px; border-left: 1px solid var(--line); color: var(--warn); }
+
+/* ---------- Surfaces ---------- */
+.card {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15); backdrop-filter: blur(18px) saturate(1.15);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-lg); padding: 18px; box-shadow: var(--shadow);
+}
+.card h2 { font-size: 26px; color: var(--title); margin-bottom: 6px; }
+.muted { color: var(--ink-2); }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.gap-top { margin-top: 18px; }
+.empty { padding: 18px; text-align: center; color: var(--ink-2); font-weight: 700; }
+.pill-note, .day, .pill-title {
+  align-self: flex-start; display: inline-block;
+  background: var(--glass-2); border: 1px solid var(--line); border-radius: 999px;
+}
+.pill-note { padding: 5px 12px; font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.pill-note:empty { display: none; }
+.pill-title { font-size: 22px; color: var(--title); padding: 6px 14px; }
+
+/* ---------- Boutons ---------- */
+.btn {
+  appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 20px; border-radius: var(--r-md); border: 1.5px solid transparent;
+  font: 700 17px/1.1 var(--f-body); text-decoration: none; cursor: pointer;
+  color: var(--ink); background: transparent; transition: transform .08s, background-color .15s;
+}
+.btn:active { transform: scale(.98); }
+.btn .ico { width: 22px; height: 22px; }
+.btn-xl { min-height: 62px; font-size: 19px; border-radius: 18px; }
+.btn-sm { min-height: 42px; padding: 0 14px; font-size: 15px; border-radius: 12px; }
+.btn-block { width: 100%; }
+.btn-primary { background: var(--pine); color: #f5f1e4; box-shadow: 0 10px 20px -12px rgba(29, 58, 46, .9); }
+.btn-primary:hover { background: var(--pine-2); }
+.btn-ghost { background: var(--glass-2); border-color: var(--line); color: var(--title); }
+.btn-quiet { color: var(--ink-2); }
+.btn-danger { background: var(--danger-bg); color: #fff; }
+.btn-danger-ghost { background: var(--glass-2); border-color: rgba(168, 53, 43, .3); color: var(--danger); }
+.btn[disabled] { opacity: .65; pointer-events: none; }
+.btn.loading::after {
+  content: ""; width: 18px; height: 18px; border-radius: 50%;
+  border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite;
+}
+
+/* ---------- Champs ---------- */
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lbl { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.card > .lbl { display: block; margin-bottom: 10px; }
+.input {
+  width: 100%; min-height: 56px; padding: 0 16px;
+  font: 400 19px var(--f-body); color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  outline: none; -webkit-appearance: none; appearance: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus { border-color: var(--moss); box-shadow: 0 0 0 4px rgba(86, 121, 74, .18); }
+.input::placeholder { color: #9eaaa2; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.input-caps { text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.input-pin { letter-spacing: .3em; font-weight: 700; }
+select.input {
+  padding-right: 42px; font-size: 17px;
+  background: var(--surface) var(--select-arrow) right 14px center / 18px no-repeat;
+}
+input[type="date"].input { font-size: 17px; }
+.lbl-note { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--fern); color: var(--moss); font-size: 13px; }
+.fields { display: flex; flex-direction: column; gap: 16px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 350px) { .field-row { grid-template-columns: 1fr; } }
+.invalid .lbl { color: var(--danger); }
+.invalid .input, .invalid .stepper { border-color: var(--danger); }
+.card.invalid { box-shadow: 0 0 0 2px var(--danger), var(--shadow); }
+.form-error {
+  padding: 12px 14px; border-radius: 12px;
+  color: var(--danger); font-weight: 700; background: var(--glass-2);
+}
+
+/* Quantité : − / + */
+.stepper {
+  display: grid; grid-template-columns: 46px 1fr 46px; min-height: 56px; overflow: hidden;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+}
+.stepper:focus-within { border-color: var(--moss); box-shadow: 0 0 0 4px rgba(86, 121, 74, .18); }
+.stepper .input {
+  min-height: 53px; padding: 0; border: 0; border-radius: 0; box-shadow: none; text-align: center;
+  font: 800 30px var(--f-display);
+}
+.step { border: 0; background: var(--fern); color: var(--title); font: 700 26px var(--f-body); cursor: pointer; }
+.step:active { background: #d6e2cf; }
+
+/* Essences : cartes avec rond de bois */
+.pick { display: grid; gap: 10px; }
+.pick-species { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.pick-btn {
+  display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 0 16px;
+  border-radius: 16px; border: 1.5px solid var(--line); background: var(--surface);
+  font: 700 19px var(--f-body); color: var(--ink); text-align: left; cursor: pointer;
+}
+.pick-btn.on { background: var(--pine); border-color: var(--pine); color: #f5f1e4; }
+.pick-btn.on::after { content: "✓"; margin-left: auto; font-size: 20px; }
+.swatch {
+  display: inline-block; width: 24px; height: 24px; flex: none; border-radius: 50%; vertical-align: -5px;
+  background: repeating-radial-gradient(circle at 45% 55%, transparent 0 3px, rgba(90, 63, 44, .25) 4px 5px), var(--sw, #dcbd8c);
+  box-shadow: 0 0 0 2px rgba(90, 63, 44, .45);
+  margin-right: 2px;
+}
+
+/* Choix : tampons de classement du bois */
+.pick-grade { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+.stamp {
+  min-height: 74px; cursor: pointer;
+  font: 800 31px/1 var(--f-display); letter-spacing: .02em; color: var(--title);
+  background: var(--surface); border: 2px solid var(--title); border-radius: 12px;
+  outline: 1.5px solid var(--stamp-inner); outline-offset: -7px;
+}
+.stamp.on { background: var(--pine); color: var(--sapwood); outline-color: rgba(231, 201, 143, .75); }
+.stamp-static { display: inline-grid; place-items: center; min-height: 0; padding: 7px 12px; font-size: 24px; cursor: default; outline-offset: -5px; }
+.stamp-mini {
+  margin-left: 6px; padding: 0 5px; border: 1.5px solid currentColor; border-radius: 5px;
+  font: 800 15px/1.3 var(--f-display);
+}
+
+.sticky-actions { position: sticky; bottom: calc(var(--sb) + 10px); z-index: 5; display: flex; gap: 10px; }
+.sticky-actions .btn-primary { flex: 1; }
+.sticky-actions .btn-quiet { background: var(--glass-2); border-color: var(--line); }
+.sale-form { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- Plaque d'immatriculation ---------- */
+.plate {
+  position: relative; display: inline-block;
+  padding: 2px 9px 2px 15px; border: 1.5px solid #1b1b1b; border-radius: 5px;
+  background: #FFFFFF; color: #111; font: 700 14px/1.3 var(--f-body); letter-spacing: .06em; white-space: nowrap;
+}
+.plate::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: #1f47a8; border-radius: 3px 0 0 3px; }
+.plate-lg { font-size: 18px; padding: 3px 11px 3px 18px; }
+.plate-lg::before { width: 9px; }
+
+/* ---------- Accueil ---------- */
+.home-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding-top: 10px; }
+.hello { font-size: 18px; font-weight: 700; color: var(--ink-2); }
+.home-name {
+  font-size: clamp(48px, 13vw, 72px); font-weight: 800; line-height: .92; color: var(--title);
+  text-shadow: var(--title-shadow);
+}
+.home-grid { display: flex; flex-direction: column; gap: 14px; }
+.home-main { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 960px) {
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+}
+
+/* Le bouton principal : une bille de bois vue en coupe */
+.log-cta {
+  display: flex; align-items: center; gap: 20px; min-height: 128px; padding: 20px 22px;
+  border-radius: var(--r-xl); text-decoration: none; color: #f5f1e4;
+  background: linear-gradient(135deg, #1d3a2e 0%, #2a5140 100%);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: 0 20px 38px -18px rgba(16, 36, 28, .95);
+  transition: transform .1s;
+}
+.log-cta:active { transform: scale(.985); }
+.log-end {
+  width: 86px; height: 86px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; color: #5a3f2c;
+  background:
+    radial-gradient(circle at 46% 54%, #a97a45 0 2px, transparent 3px),
+    repeating-radial-gradient(circle at 46% 54%, #eed4a0 0 4px, #dbb477 5px 6px, #ebcd95 7px 10px, #d3a767 11px 12px);
+  box-shadow: 0 0 0 5px #6b4a31, 0 0 0 7px rgba(0, 0, 0, .18), inset 0 0 16px rgba(90, 63, 44, .45);
+}
+.log-end .ico { width: 42px; height: 42px; padding: 7px; stroke-width: 3; border-radius: 50%; background: rgba(251, 243, 226, .9); }
+.log-end-sm { width: 62px; height: 62px; }
+.log-text strong { display: block; font: 800 36px/1 var(--f-display); letter-spacing: .01em; }
+.log-text span { display: block; margin-top: 6px; font-size: 16px; color: rgba(245, 241, 228, .78); }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+  min-height: 104px; padding: 16px; border-radius: var(--r-lg); text-decoration: none;
+  font-size: 18px; font-weight: 700; color: var(--title);
+  background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border: 1px solid var(--card-border); box-shadow: var(--shadow);
+}
+.tile .ico { width: 30px; height: 30px; }
+.tile:active { background: var(--glass-2); }
+.badge {
+  position: absolute; top: 12px; right: 12px; min-width: 26px; height: 26px; padding: 0 7px;
+  display: grid; place-items: center; border-radius: 13px;
+  background: var(--heartwood); color: #fff; font-size: 14px;
+}
+.today-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.today-head h2 { margin: 0; }
+.today-stat { font-weight: 700; color: var(--ink-2); }
+.more-link { display: block; margin-top: 10px; padding: 10px; text-align: center; font-weight: 700; color: var(--title); text-decoration: none; }
+
+/* ---------- Cartes de vente ---------- */
+.sale-list { display: flex; flex-direction: column; gap: 8px; }
+.sale {
+  display: block; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: var(--ink);
+  background: var(--glass-2); border: 1px solid var(--line);
+}
+.sale:active { background: var(--surface); }
+.sale-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.sale-client { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 18px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sale-time { flex: none; font-size: 15px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.sale-mid { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0; }
+.sale-mid:empty { display: none; }
+.sale-section { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.sale-bot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+.sale-wood { display: inline-flex; align-items: center; gap: 4px; color: var(--bark); }
+.sale-wood b { font: 800 21px var(--f-display); margin-left: 4px; }
+.sale-seller { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); }
+.sale-seller .ico { width: 16px; height: 16px; }
+.is-pending { border-style: dashed; border-color: var(--warn); background: var(--pending-bg); }
+.is-pending .sale-seller { color: var(--warn); font-weight: 700; }
+.is-new { animation: arrive 2.6s ease-out; }
+.dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--heartwood); }
+
+.hist-list { display: flex; flex-direction: column; }
+.day { margin: 14px 0 8px; padding: 4px 12px; font: 700 19px var(--f-display); color: var(--title); }
+.hist-list > .day:first-child { margin-top: 0; }
+@media (min-width: 960px) {
+  .hist-list .sale-list, .view > .sale-list { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- Recherche et filtres ---------- */
+.searchbar {
+  display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px;
+  border-radius: 18px; background: var(--glass-2); border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.searchbar > .ico { color: var(--ink-3); }
+.search-input { flex: 1; min-width: 0; min-height: 48px; border: 0; outline: none; background: transparent; font: 19px var(--f-body); color: var(--ink); }
+.search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.filter-toggle {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 14px; border: 0; border-radius: 13px;
+  background: var(--fern); color: var(--title); font: 700 16px var(--f-body); cursor: pointer;
+}
+.filter-toggle[aria-expanded="true"] { background: var(--pine); color: #f5f1e4; }
+.fcount { min-width: 20px; height: 20px; padding: 0 5px; display: grid; place-items: center; border-radius: 10px; background: var(--heartwood); color: #fff; font-size: 13px; }
+.filters { display: flex; flex-direction: column; gap: 14px; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  min-height: 44px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--surface); font: 700 15px var(--f-body); color: var(--ink-2);
+}
+.seg button.on { background: var(--pine); border-color: var(--pine); color: #f5f1e4; }
+.seg-2 { display: grid; grid-template-columns: 1fr 1fr; }
+.seg-2 button { min-height: 50px; font-size: 16px; }
+
+/* ---------- Récapitulatif / détail ---------- */
+.kv { margin: 0; display: flex; flex-direction: column; }
+.kv > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.kv > div:last-child { border-bottom: 0; }
+.kv dt { font-size: 16px; color: var(--ink-2); }
+.kv dd { margin: 0; font-size: 19px; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.kv-soft { margin-top: 8px; padding-top: 4px; border-top: 2px solid var(--line); }
+.kv-soft dd { font-size: 17px; color: var(--ink-2); }
+.recap-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; }
+
+.detail-head { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.detail-client { font-size: 40px; color: var(--title); overflow-wrap: anywhere; }
+.detail-wood {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 16px 18px; margin-bottom: 8px; border-radius: 16px;
+  background: repeating-linear-gradient(92deg, rgba(90, 63, 44, .05) 0 2px, transparent 2px 9px), var(--wood-surface);
+  border: 1px solid rgba(90, 63, 44, .15);
+}
+.detail-qty .num { font: 800 58px/1 var(--f-display); color: var(--bark); }
+.detail-qty span:last-child { display: block; font-weight: 700; color: var(--bark); }
+.detail-spec { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.detail-spec .species { font: 800 30px var(--f-display); color: var(--bark); }
+.meta { margin-top: 12px; font-size: 14px; color: var(--ink-3); }
+.meta.warn { display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 700; }
+
+/* ---------- Confirmation ---------- */
+.done { min-height: 72dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px 4px; text-align: center; }
+.done-mark {
+  width: 108px; height: 108px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--pine); color: var(--sapwood); box-shadow: 0 0 0 9px rgba(29, 58, 46, .16);
+  animation: pop .45s cubic-bezier(.2, 1.4, .4, 1);
+}
+.done-mark .ico { width: 58px; height: 58px; stroke-width: 3; }
+.done h1 { font-size: 50px; color: var(--title); text-shadow: var(--title-shadow); }
+.done-sub { max-width: 36ch; padding: 10px 14px; border-radius: 14px; background: var(--glass-2); }
+.done-recap { display: flex; flex-direction: column; gap: 2px; min-width: 260px; }
+.done-recap strong { font-size: 19px; }
+.done-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
+
+/* ---------- Profil ---------- */
+.profile-card { display: flex; align-items: center; gap: 16px; }
+.profile-name { font-size: 32px; color: var(--title); }
+.avatar {
+  width: 66px; height: 66px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  background: var(--sapwood); color: #5a3f2c; font: 800 27px var(--f-display);
+  box-shadow: inset 0 0 0 3px rgba(90, 63, 44, .25);
+}
+.avatar-sm { width: 46px; height: 46px; font-size: 19px; }
+.role { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; background: var(--fern); color: var(--title); }
+.role-chef { background: var(--pine); color: var(--sapwood); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat b { display: block; font: 800 52px/1 var(--f-display); color: var(--title); }
+.stat span { font-weight: 700; color: var(--ink-2); }
+.card p + .btn { margin-top: 14px; }
+
+/* ---------- Notifications / admin ---------- */
+.push-card .btn-block { margin-top: 14px; }
+.push-on { display: flex; align-items: flex-start; gap: 14px; }
+.ok-dot { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #fff; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.admin-grid { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 960px) { .admin-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
+.admin-block { display: flex; flex-direction: column; gap: 12px; }
+.member { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.member:last-child { border-bottom: 0; }
+.member-info { flex: 1 1 150px; min-width: 0; }
+.member-info strong { display: block; font-size: 18px; }
+.member-info span { font-size: 15px; color: var(--ink-3); }
+.member-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.is-off { opacity: .55; }
+.ref-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 18px; font-weight: 700; }
+.add-row { display: flex; gap: 8px; }
+.add-row .input { min-height: 52px; font-size: 17px; }
+.code-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.team-code { font: 800 34px var(--f-display); letter-spacing: .08em; color: var(--title); overflow-wrap: anywhere; }
+
+/* ---------- Connexion ---------- */
+.auth { min-height: calc(100dvh - 60px); max-width: 460px; margin: 0 auto; padding: 20px 0; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 18px; }
+.brand h1 { font-size: 50px; font-weight: 800; color: var(--title); text-shadow: var(--title-shadow); }
+.brand p { font-weight: 700; color: var(--ink-2); }
+.auth-form { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+.hint { margin-top: 14px; font-size: 15px; color: var(--ink-2); }
+.screen-title { font-size: 34px; color: var(--title); margin-bottom: 10px; }
+
+/* ---------- Divers ---------- */
+.skel {
+  height: 64px; margin-bottom: 8px; border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .85), rgba(255, 255, 255, .45)) 0 0 / 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+#toasts {
+  position: fixed; left: 0; right: 0; bottom: calc(var(--sb) + 18px); z-index: 100;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 16px; pointer-events: none;
+}
+.toast {
+  max-width: 480px; padding: 14px 18px; border-radius: 14px; font-weight: 700;
+  background: #16241c; color: #fff; box-shadow: var(--shadow);
+  opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity: 1; transform: none; }
+.toast-ok { background: #2e7a4b; }
+.toast-error { background: #a8352b; }
+.modal {
+  position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px 16px calc(var(--sb) + 16px); background: rgba(16, 36, 28, .45);
+}
+@media (min-width: 600px) { .modal { align-items: center; } }
+.modal-box { width: 100%; max-width: 440px; padding: 22px; display: flex; flex-direction: column; gap: 14px; border-radius: 22px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); animation: rise .2s ease-out; }
+.modal-box h2 { font-size: 30px; color: var(--title); }
+.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.boot { min-height: 80dvh; display: grid; place-items: center; }
+.spinner { width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(29, 58, 46, .2); border-top-color: var(--pine); animation: spin .8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes rise { from { transform: translateY(20px); opacity: 0; } }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+@keyframes arrive { 0% { background: #f6e3b8; box-shadow: 0 0 0 3px rgba(183, 119, 63, .45); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Ajouts : longueur, colis, e-mail ---------- */
+.unit-input { position: relative; display: block; }
+.unit-input .input { padding-right: 38px; font-weight: 700; }
+.unit-input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-weight: 700; color: var(--ink-3); pointer-events: none; }
+.stepper-wide { grid-template-columns: 64px 1fr 64px; }
+.lbl-soft { margin-left: 4px; font-weight: 400; color: var(--ink-3); font-size: 14px; }
+.sale-ref { font-size: 14px; font-weight: 700; color: var(--bark); background: var(--wood-surface); padding: 1px 8px; border-radius: 6px; }
+.member-mail { display: block; font-size: 14px; color: var(--ink-3); overflow-wrap: anywhere; }
+.profile-mail { margin-top: 6px; color: var(--ink-2); overflow-wrap: anywhere; }
+.pw { position: relative; display: block; }
+.pw .input { padding-right: 96px; }
+.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--fern); color: var(--title); font: 700 15px var(--f-body); cursor: pointer; }
+.form-ok { padding: 12px 14px; border-radius: 12px; color: var(--ok); font-weight: 700; background: var(--glass-2); }
+.link-btn { margin-top: 8px; text-decoration: underline; text-underline-offset: 3px; }
+.auth .card h2 { font-size: 30px; }
+
+/* ---------- Plusieurs produits, options, observation ---------- */
+.items { display: flex; flex-direction: column; gap: 14px; }
+.item-card { border-left: 5px solid var(--sapwood); }
+.item-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.item-head h2 { margin: 0; font-size: 26px; }
+.field.invalid .pick { outline: 2px solid var(--danger); outline-offset: 5px; border-radius: 14px; }
+.btn-add {
+  border: 2px dashed var(--title); background: var(--glass-2); color: var(--title);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.btn-add .ico { width: 26px; height: 26px; stroke-width: 2.6; }
+.pick-options { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.opt-btn {
+  min-height: 54px; padding: 0 14px; border-radius: 14px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--bark);
+  font: 800 22px/1 var(--f-display); letter-spacing: .04em;
+}
+.opt-btn.on { background: var(--bark-bg); border-color: var(--bark-bg); color: #f7ecd6; }
+.opt-btn.on::before { content: "✓ "; font-family: var(--f-body); font-size: 17px; }
+.opt-tag {
+  display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 5px;
+  background: var(--bark-bg); color: #f7ecd6; font: 800 13px/1.5 var(--f-display); letter-spacing: .04em;
+}
+.textarea { min-height: 96px; padding: 14px 16px; resize: vertical; line-height: 1.4; font-size: 18px; }
+
+.sale-lines { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 2px; }
+.sale-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 15px; color: var(--bark); }
+.sale-line b { font: 800 20px var(--f-display); margin: 0 3px 0 4px; }
+.sale-more { font-size: 14px; font-weight: 700; color: var(--ink-3); padding-left: 30px; }
+.sale-total { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.sale-obs { font-size: 13px; font-weight: 700; color: var(--ink-3); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; }
+
+.recap-items { display: flex; flex-direction: column; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+.item-block { padding: 12px 0; border-bottom: 2px solid var(--line); }
+.item-block:last-of-type { border-bottom: 0; }
+.item-no { font: 700 18px var(--f-display); color: var(--moss); margin-bottom: 6px; }
+.item-main {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px; margin-bottom: 4px;
+  background: repeating-linear-gradient(92deg, rgba(90, 63, 44, .05) 0 2px, transparent 2px 9px), var(--wood-surface);
+  border: 1px solid rgba(90, 63, 44, .15);
+}
+.item-qty .num { font: 800 44px/1 var(--f-display); color: var(--bark); }
+.item-qty span:last-child { display: block; font-weight: 700; color: var(--bark); font-size: 15px; }
+.item-spec { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.item-spec .species { font: 800 26px var(--f-display); color: var(--bark); }
+.kv-tight > div { padding: 9px 0; }
+.recap-total { margin-top: 10px; padding: 10px 14px; border-radius: 12px; background: var(--pine); color: var(--sapwood); font-weight: 700; text-align: center; }
+.recap-total-top { margin-top: 0; }
+.obs-text { margin-top: 6px; font-size: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.item-card .pick-grade { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); }
+.item-card .stamp { min-height: 66px; font-size: 28px; }
+.opt-btn { white-space: nowrap; font-size: 20px; }
+.opt-btn.on::before { font-size: 15px; }
+
+
+/* =====================================================================
+   MODE SOMBRE : automatique (réglage du téléphone) ou forcé dans Mon profil
+   ===================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --title: #cfe5d2;
+  --pine: #2c5a45;
+  --pine-2: #356b52;
+  --moss: #8fbf84;
+  --fern: #26392d;
+  --ink: #e5ece6;
+  --ink-2: #b6c4b9;
+  --ink-3: #8d9d91;
+  --line: rgba(214, 232, 218, .16);
+  --glass: rgba(20, 32, 25, .82);
+  --glass-2: rgba(28, 42, 34, .95);
+  --surface: #1c2a22;
+  --bark: #e8cc9c;
+  --bark-bg: #7a5536;
+  --wood-surface: #3a2b1f;
+  --ok: #6cbf88;
+  --warn: #e3a55c;
+  --danger: #ec8a7e;
+  --danger-bg: #b3392e;
+  --topbar-bg: rgba(16, 26, 20, .88);
+  --card-border: rgba(255, 255, 255, .07);
+  --pending-bg: rgba(74, 52, 22, .6);
+  --title-shadow: none;
+  --body-bg: #101a14;
+  --stamp-inner: rgba(207, 229, 210, .35);
+  --shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 12px 30px -14px rgba(0, 0, 0, .7);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfe5d2' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --bg-overlay: linear-gradient(180deg, rgba(8, 14, 10, .74) 0%, rgba(8, 14, 10, .5) 40%, rgba(8, 14, 10, .8) 100%);
+  --bg-fallback: radial-gradient(120% 70% at 15% 0%, #23372a 0%, rgba(35, 55, 42, 0) 60%),
+    radial-gradient(90% 60% at 100% 100%, rgba(122, 85, 54, .35) 0%, rgba(122, 85, 54, 0) 60%),
+    linear-gradient(165deg, #1b2b21 0%, #132019 55%, #0e1712 100%);
+  color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --title: #cfe5d2;
+  --pine: #2c5a45;
+  --pine-2: #356b52;
+  --moss: #8fbf84;
+  --fern: #26392d;
+  --ink: #e5ece6;
+  --ink-2: #b6c4b9;
+  --ink-3: #8d9d91;
+  --line: rgba(214, 232, 218, .16);
+  --glass: rgba(20, 32, 25, .82);
+  --glass-2: rgba(28, 42, 34, .95);
+  --surface: #1c2a22;
+  --bark: #e8cc9c;
+  --bark-bg: #7a5536;
+  --wood-surface: #3a2b1f;
+  --ok: #6cbf88;
+  --warn: #e3a55c;
+  --danger: #ec8a7e;
+  --danger-bg: #b3392e;
+  --topbar-bg: rgba(16, 26, 20, .88);
+  --card-border: rgba(255, 255, 255, .07);
+  --pending-bg: rgba(74, 52, 22, .6);
+  --title-shadow: none;
+  --body-bg: #101a14;
+  --stamp-inner: rgba(207, 229, 210, .35);
+  --shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 12px 30px -14px rgba(0, 0, 0, .7);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfe5d2' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --bg-overlay: linear-gradient(180deg, rgba(8, 14, 10, .74) 0%, rgba(8, 14, 10, .5) 40%, rgba(8, 14, 10, .8) 100%);
+  --bg-fallback: radial-gradient(120% 70% at 15% 0%, #23372a 0%, rgba(35, 55, 42, 0) 60%),
+    radial-gradient(90% 60% at 100% 100%, rgba(122, 85, 54, .35) 0%, rgba(122, 85, 54, 0) 60%),
+    linear-gradient(165deg, #1b2b21 0%, #132019 55%, #0e1712 100%);
+  color-scheme: dark;
+}
+.stepper .step:active { background: var(--line); }
+.skel { opacity: .6; }
+
+/* ---------- Réglages, comptes à valider, statistiques ---------- */
+.seg-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.seg-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.seg-3 button, .seg-4 button { padding: 0 6px; }
+.tiles > .tile:last-child:nth-child(odd) { grid-column: span 2; min-height: 84px; }
+.pending-box { margin-bottom: 8px; padding: 12px 14px; border-radius: 14px; background: var(--pending-bg); border: 1.5px dashed var(--warn); }
+.pending-box h3 { font-size: 21px; color: var(--warn); }
+.pending-box .member { border-bottom-color: rgba(168, 102, 26, .25); }
+.stats-body { display: flex; flex-direction: column; gap: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kpi { padding: 14px 12px; }
+.kpi b { display: block; font: 800 clamp(28px, 8vw, 44px)/1 var(--f-display); color: var(--title); }
+.kpi span { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.stat-block h2 { font-size: 23px; margin-bottom: 12px; }
+.stat-grid { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 960px) { .stat-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
+.cols { display: flex; align-items: flex-end; gap: 3px; height: 150px; padding-top: 6px; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
+.col i { width: 100%; max-width: 34px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, var(--heartwood), var(--sapwood)); }
+.col span { height: 16px; font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.bar-row { display: grid; grid-template-columns: minmax(80px, 30%) 1fr auto; align-items: center; gap: 10px; padding: 7px 0; }
+.bar-label { display: flex; align-items: center; gap: 6px; font-weight: 700; min-width: 0; }
+.bar-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 12px; border-radius: 6px; background: var(--fern); overflow: hidden; }
+.bar-track i { display: block; height: 100%; border-radius: 6px; background: var(--moss); }
+.bar-val { text-align: right; font-size: 14px; color: var(--ink-2); white-space: nowrap; }
+.bar-val b { font: 800 18px var(--f-display); color: var(--ink); }
+.bar-val small { display: block; font-size: 12px; color: var(--ink-3); }
+.stat-note { padding: 0 4px; }
+.pick-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.pick-options .opt-btn { flex: 1 0 auto; min-width: 80px; padding: 0 12px; }
+.bar-row { grid-template-columns: minmax(112px, 36%) 1fr auto; }
+
+/* ---------- Ventes pas encore consultées : saumon ---------- */
+:root { --unread-bg: #f3bfa8; --unread-border: #c9694a; --unread-tag: #a8492c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --unread-bg: rgba(201, 105, 74, .34); --unread-border: #e08a6a; --unread-tag: #c9694a; } }
+:root[data-theme="dark"] { --unread-bg: rgba(201, 105, 74, .34); --unread-border: #e08a6a; --unread-tag: #c9694a; }
+.sale.is-unread { background: var(--unread-bg); border-color: var(--unread-border); border-left: 6px solid var(--unread-border); }
+.sale.is-unread .sale-client { font-weight: 800; }
+.new-tag {
+  flex: none; padding: 1px 7px; border-radius: 6px; background: var(--unread-tag); color: #fff;
+  font: 700 12px/1.5 var(--f-body); font-style: normal; letter-spacing: .02em;
+}
+.badge-new { background: var(--unread-tag); }
+.list-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.list-head .btn-sm { min-height: 38px; }
+.topbar-title { font-size: clamp(24px, 7.2vw, 30px); }
+
+/* ---------- Section en deux cases, référence colis ---------- */
+.item-card .field-row { grid-template-columns: 1.45fr 1fr; }
+.sec-pair { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 4px; }
+.input-sec { padding: 0 6px; text-align: center; font-weight: 700; font-size: 20px; }
+.sec-x { font: 800 22px var(--f-display); color: var(--ink-3); }
+.input-ref { font-weight: 700; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+@media (max-width: 350px) { .item-card .field-row { grid-template-columns: 1fr; } }
+/* Nom du client un peu plus discret sur les cartes */
+.sale-client { font-size: 16px; }
+.sale.is-unread .sale-client { font-weight: 700; }
+
+/* ---------- Réglage du son ---------- */
+.sound-card { display: flex; flex-direction: column; gap: 12px; }
+.sound-card h2 { margin-bottom: 0; }
+.sound-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sound-opt {
+  min-height: 52px; padding: 0 12px; border-radius: 14px; cursor: pointer; text-align: left;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: 700 16px var(--f-body);
+}
+.sound-opt.on { background: var(--pine); border-color: var(--pine); color: #f5f1e4; }
+.sound-opt.on::after { content: " ✓"; }
+.vol-field .lbl { display: flex; justify-content: space-between; }
+.vol { width: 100%; height: 44px; accent-color: var(--moss); }
+
+/* ---------- Nouvelle vente reçue : nom du client en grand ---------- */
+.sale.is-unread .sale-client { font: 800 23px/1.1 var(--f-display); letter-spacing: .01em; white-space: normal; }
+.sale.is-unread .new-tag { font-family: var(--f-body); }
+.done-emoji { font-size: .8em; vertical-align: .05em; }
+
+/* ---------- Statistiques : comparaison, voir plus, vendeurs cliquables ---------- */
+.kpi .delta { display: block; margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.kpi .delta.up { color: var(--ok); }
+.kpi .delta.down { color: var(--danger); }
+.kpi-note { margin-top: -6px; padding: 0 4px; font-size: 13px; color: var(--ink-2); }
+.more-btn { width: 100%; margin-top: 6px; text-decoration: underline; text-underline-offset: 3px; }
+a.bar-row { text-decoration: none; color: inherit; }
+.bar-row.is-link { grid-template-columns: minmax(112px, 36%) 1fr auto 14px; border-radius: 10px; margin: 0 -8px; padding: 7px 8px; }
+.bar-row.is-link:active { background: var(--fern); }
+.bar-go { font: 800 22px var(--f-display); color: var(--ink-3); }
+
+</style>
+  <script>(function () { var m = localStorage.getItem('scierie-theme'); if (m === 'light' || m === 'dark') document.documentElement.dataset.theme = m; })();</script>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <div id="app"><div class="boot"><div class="spinner"></div></div></div>
+  <div id="toasts" aria-live="polite"></div>
+  <script>window.__recovery = /type=recovery/.test(location.hash + location.search);</script>
+  <script src="config.js"></script>
+  <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+
+const __m = {};
+// ===== config.js =====
+__m['config'] = (() => {
+const CONFIG = window.SCIERIE_CONFIG || {};
+return { CONFIG };
+})();
+// ===== supabase.js =====
+__m['supabase'] = (() => {
+const { CONFIG } = __m['config'];
+
+const configured =
+  /^https:\/\/.+/.test(CONFIG.SUPABASE_URL) &&
+  !CONFIG.SUPABASE_URL.includes('VOTRE-PROJET') &&
+  !CONFIG.SUPABASE_ANON_KEY.includes('VOTRE-CLE');
+
+const sb = configured
+  ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: 'scierie-auth' },
+      realtime: { params: { eventsPerSecond: 10 } },
+    })
+  : null;
+
+return { configured, sb };
+})();
+// ===== ui.js =====
+__m['ui'] = (() => {
+// Petits outils d'interface partagés
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const ICONS = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+  bell: '<path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  gear: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  filter: '<path d="M4 5h16l-6 8v5l-4 2v-7z"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  logout: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  phone: '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+};
+const icon = (n, cls = '') =>
+  `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+function toast(msg, type = 'info', ms = 3200) {
+  const box = document.getElementById('toasts');
+  if (!box) return;
+  while (box.children.length >= 2) box.firstChild.remove();
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  box.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, ms);
+}
+
+const fmtDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fmtTime = (d) => new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+// 4.5 → « 4,50 m » ; saisie « 4,5 » ou « 4.5 » → 4.5
+const fmtLength = (v, unit = true) => (v == null || v === '' ? '' :
+  Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (unit ? ' m' : ''));
+const parseLength = (s) => { const n = parseFloat(String(s).replace(',', '.').replace(/[^\d.]/g, '')); return Number.isFinite(n) ? n : NaN; };
+
+function startOfDay(d = new Date()) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+
+function dayLabel(d) {
+  const day = startOfDay(d).getTime();
+  const today = startOfDay();
+  if (day === today.getTime()) return 'Aujourd’hui';
+  const y = new Date(today); y.setDate(y.getDate() - 1);
+  if (day === y.getTime()) return 'Hier';
+  const date = new Date(d);
+  const s = date.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+    ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+function debounce(fn, ms = 300) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+const initials = (name = '') =>
+  name.trim().split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() || '?';
+
+const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+
+// Fenêtre de confirmation (ou de saisie si input est fourni)
+function dialog({ title, message = '', okLabel = 'Confirmer', cancelLabel = 'Annuler', danger = false, input = null }) {
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mdl-t">
+        <h2 id="mdl-t">${esc(title)}</h2>
+        ${message ? `<p>${esc(message)}</p>` : ''}
+        ${input ? `<input class="input" ${input.attrs || ''} placeholder="${esc(input.placeholder || '')}" value="${esc(input.value || '')}">` : ''}
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-no>${esc(cancelLabel)}</button>
+          <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-ok>${esc(okLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const inp = wrap.querySelector('input');
+    (inp || wrap.querySelector('[data-ok]')).focus();
+    const close = (v) => { wrap.remove(); resolve(v); };
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap || e.target.closest('[data-no]')) close(input ? null : false);
+      else if (e.target.closest('[data-ok]')) close(input ? inp.value : true);
+    });
+    inp?.addEventListener('keydown', (e) => { if (e.key === 'Enter') close(inp.value); });
+  });
+}
+
+// Thème : 'auto' (suit le téléphone), 'light' ou 'dark'
+const getTheme = () => localStorage.getItem('scierie-theme') || 'auto';
+function applyTheme(mode = getTheme()) {
+  const r = document.documentElement;
+  if (mode === 'auto') delete r.dataset.theme; else r.dataset.theme = mode;
+  const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#101a14' : '#1d3a2e');
+}
+function setTheme(mode) { localStorage.setItem('scierie-theme', mode); applyTheme(mode); }
+
+return { esc, icon, toast, fmtDate, fmtTime, fmtLength, parseLength, startOfDay, dayLabel, uuid, debounce, initials, plural, dialog, getTheme, applyTheme, setTheme };
+})();
+// ===== store.js =====
+__m['store'] = (() => {
+// =====================================================================
+//  Données partagées, synchronisation temps réel et file d'envoi
+//  hors ligne (aucune vente perdue, aucun doublon).
+// =====================================================================
+const { sb } = __m['supabase'];
+
+const OUTBOX_KEY = 'scierie-outbox';
+const PROFILE_KEY = 'scierie-profile';
+const REFS_KEY = 'scierie-refs';
+
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* stockage plein */ } };
+
+const store = {
+  session: null,
+  profile: null,
+  species: [],
+  grades: [],
+  options: [],
+  outbox: load(OUTBOX_KEY, []),
+  rt: 'connecting',
+};
+
+const listeners = new Set();
+const on = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
+const emit = (type, data) => listeners.forEach((fn) => { try { fn(type, data); } catch (e) { console.error(e); } });
+
+const pendingMine = () => store.outbox.filter((o) => o._owner === store.profile?.id);
+const activeSpecies = () => store.species.filter((s) => s.active);
+const activeGrades = () => store.grades.filter((g) => g.active);
+const activeOptions = () => store.options.filter((o) => o.active);
+
+async function initStore(session) {
+  store.session = session;
+  const uid = session.user.id;
+
+  const { data } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+  if (data) { store.profile = data; save(PROFILE_KEY, data); }
+  else {
+    const cached = load(PROFILE_KEY, null);
+    if (cached?.id === uid && !navigator.onLine) store.profile = cached;
+  }
+  if (!store.profile) return;
+
+  const refs = load(REFS_KEY, null);
+  if (refs) { store.species = refs.species; store.grades = refs.grades; store.options = refs.options || []; loadRefs(); }
+  else await loadRefs();
+
+  startRealtime();
+  window.addEventListener('online', () => { emit('net'); flushOutbox(); emit('refresh'); });
+  window.addEventListener('offline', () => emit('net'));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { flushOutbox(); emit('refresh'); }
+  });
+  setInterval(flushOutbox, 30000);
+  flushOutbox();
+}
+
+function clearProfileCache() { localStorage.removeItem(PROFILE_KEY); }
+
+async function loadRefs() {
+  const [a, b, c] = await Promise.all([
+    sb.from('species').select('*').order('sort_order').order('name'),
+    sb.from('grades').select('*').order('sort_order').order('name'),
+    sb.from('wood_options').select('*').order('sort_order').order('name'),
+  ]);
+  if (a.data && b.data && c.data) {
+    store.species = a.data; store.grades = b.data; store.options = c.data;
+    save(REFS_KEY, { species: a.data, grades: b.data, options: c.data });
+    emit('refs');
+  }
+}
+
+function startRealtime() {
+  sb.channel('scierie-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, (p) => emit('sale', p))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'species' }, () => loadRefs())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'grades' }, () => loadRefs())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'wood_options' }, () => loadRefs())
+    .subscribe((status) => {
+      const prev = store.rt;
+      store.rt = status;
+      emit('net');
+      // Reconnexion : on recharge pour rattraper ce qui a pu être manqué
+      if (status === 'SUBSCRIBED' && prev !== 'SUBSCRIBED' && prev !== 'connecting') emit('refresh');
+    });
+}
+
+// ---------- Ventes : envoi fiable ----------
+async function addSale(sale) {
+  store.outbox.push({ ...sale, _owner: store.profile.id, _queued_at: new Date().toISOString() });
+  save(OUTBOX_KEY, store.outbox);
+  emit('outbox');
+  await flushOutbox();
+  return !store.outbox.some((s) => s.id === sale.id); // true = arrivée sur le serveur
+}
+
+let flushing = null;
+function flushOutbox() {
+  if (flushing) return flushing;
+  flushing = doFlush().finally(() => { flushing = null; });
+  return flushing;
+}
+
+async function doFlush() {
+  flushReads();
+  for (const item of [...store.outbox]) {
+    if (item._owner !== store.profile?.id) continue;
+    if (!navigator.onLine) break;
+    const { _owner, _queued_at, _error, ...row } = item;
+    let res;
+    try { res = await sb.from('sales').insert(row); }
+    catch { break; }
+    const { error, status } = res;
+    // 23505 = déjà enregistrée (envoi précédent réussi) → pas de doublon
+    if (!error || error.code === '23505') {
+      store.outbox = store.outbox.filter((s) => s.id !== item.id);
+      save(OUTBOX_KEY, store.outbox);
+      emit('outbox');
+      continue;
+    }
+    if (!status || status === 401 || !error.code) break; // réseau ou session : on réessaiera
+    item._error = error.message;
+    save(OUTBOX_KEY, store.outbox);
+    emit('outbox');
+  }
+}
+
+// ---------- Ventes consultées (« nouvelles » en saumon tant qu'on ne les a pas ouvertes) ----------
+const readSet = new Set();
+const READS_KEY = 'scierie-vus-en-attente';
+let pendingReads = load(READS_KEY, []);
+
+// Une vente est nouvelle pour moi si : un collègue l'a faite, après mon inscription, et je ne l'ai pas ouverte
+const isUnread = (s) => !!store.profile && !s._owner && s.seller_id !== store.profile.id
+  && s.created_at > store.profile.created_at && !readSet.has(s.id)
+  && !(readSet.has('*') && s.created_at <= markAllAt);
+let markAllAt = '';
+
+// Charge l'état « vu » des ventes affichées (une seule requête)
+async function loadReads(sales) {
+  const ids = sales.filter((s) => !s._owner && s.seller_id !== store.profile.id && !readSet.has(s.id)).map((s) => s.id);
+  for (let i = 0; i < ids.length; i += 150) {
+    const { data } = await sb.from('sale_reads').select('sale_id').in('sale_id', ids.slice(i, i + 150));
+    (data || []).forEach((r) => readSet.add(r.sale_id));
+  }
+}
+
+async function markRead(sale) {
+  if (!isUnread(sale)) return;
+  readSet.add(sale.id);
+  emit('read', sale.id);
+  const { error } = await sb.from('sale_reads').upsert({ user_id: store.profile.id, sale_id: sale.id },
+    { onConflict: 'user_id,sale_id', ignoreDuplicates: true }).then((r) => r, (e) => ({ error: e }));
+  if (error) { // pas de réseau : on s'en souviendra
+    pendingReads = [...new Set([...pendingReads, sale.id])];
+    save(READS_KEY, pendingReads);
+  }
+}
+
+async function flushReads() {
+  if (!pendingReads.length || !navigator.onLine || !store.profile) return;
+  const rows = pendingReads.map((id) => ({ user_id: store.profile.id, sale_id: id }));
+  const { error } = await sb.from('sale_reads').upsert(rows, { onConflict: 'user_id,sale_id', ignoreDuplicates: true });
+  if (!error || error.code === '23503') { pendingReads = []; save(READS_KEY, pendingReads); } // 23503 : vente supprimée entre-temps
+}
+
+async function markAllRead() {
+  const { error } = await sb.rpc('mark_all_read');
+  if (!error) { markAllAt = new Date().toISOString(); readSet.add('*'); emit('read', '*'); }
+  return !error;
+}
+const allMarked = () => readSet.has('*');
+
+async function unreadCount() {
+  const { data } = await sb.rpc('unread_sales_count');
+  return Number(data) || 0;
+}
+
+return { store, on, emit, pendingMine, activeSpecies, activeGrades, activeOptions, initStore, clearProfileCache, loadRefs, addSale, flushOutbox, isUnread, loadReads, markRead, markAllRead, allMarked, unreadCount };
+})();
+// ===== components.js =====
+__m['components'] = (() => {
+// Morceaux d'interface réutilisés par plusieurs écrans
+const { esc, icon, fmtTime, fmtDate, fmtLength, dayLabel } = __m['ui'];
+const { store, pendingMine } = __m['store'];
+const { CONFIG } = __m['config'];
+
+function topbar(title, { back = true } = {}) {
+  return `<header class="topbar">
+    ${back ? `<button class="round-btn" data-back aria-label="Retour">${icon('back')}</button>` : ''}
+    <h1 class="topbar-title">${esc(title)}</h1>
+    <span class="net" data-net></span>
+  </header>`;
+}
+
+// Indicateur de connexion : « En direct », « Hors ligne », ventes en attente
+function updateNet() {
+  const pending = store.profile ? pendingMine().length : 0;
+  let cls = 'wait', txt = 'Connexion';
+  if (!navigator.onLine) { cls = 'off'; txt = 'Hors ligne'; }
+  else if (store.rt === 'SUBSCRIBED') { cls = 'live'; txt = 'En direct'; }
+  const extra = pending ? `<span class="net-pending">${pending} en attente</span>` : '';
+  document.querySelectorAll('[data-net]').forEach((el) => {
+    el.className = `net net-${cls}`;
+    el.innerHTML = `<i></i>${txt}${extra}`;
+  });
+}
+
+const plate = (p, cls = '') => `<span class="plate ${cls}">${esc(p)}</span>`;
+
+const swatch = (name) =>
+  `<i class="swatch" style="--sw:${esc(CONFIG.COULEURS_ESSENCES?.[name] || '#dcbd8c')}"></i>`;
+
+const totalQty = (items = []) => items.reduce((a, it) => a + (parseInt(it.quantity, 10) || 0), 0);
+
+const optTags = (it) => (it.options || []).map((o) => `<span class="opt-tag">${esc(o)}</span>`).join('');
+
+// Une ligne compacte (cartes de l'historique)
+const itemLine = (it) => `<div class="sale-line">
+  ${swatch(it.species)}<b>${esc(it.quantity)}</b><span>${esc(it.species)} ${esc(it.section)}, ${esc(fmtLength(it.length_m))}</span>
+  <span class="stamp-mini">${esc(it.grade)}</span>${optTags(it)}</div>`;
+
+// Un bloc complet (récapitulatif et détail)
+const itemBlock = (it, i, n) => `<div class="item-block">
+  ${n > 1 ? `<p class="item-no">Produit ${i + 1}</p>` : ''}
+  <div class="item-main">
+    <div class="item-qty"><span class="num">${esc(it.quantity)}</span><span>pièces</span></div>
+    <div class="item-spec">
+      <span class="species">${swatch(it.species)}${esc(it.species)}</span>
+      <span class="stamp stamp-static" title="Choix">${esc(it.grade)}</span>
+    </div>
+  </div>
+  <dl class="kv kv-tight">
+    <div><dt>Section</dt><dd>${esc(it.section)}</dd></div>
+    <div><dt>Longueur</dt><dd>${esc(fmtLength(it.length_m))}</dd></div>
+    ${(it.options || []).length ? `<div><dt>Options</dt><dd>${optTags(it)}</dd></div>` : ''}
+    ${it.package_ref ? `<div><dt>Référence colis</dt><dd>${esc(it.package_ref)}</dd></div>` : ''}
+  </dl>
+</div>`;
+
+function saleCard(s, { pending = false, unread = false, isNew = false, showDate = false } = {}) {
+  const when = s.sold_at || s._queued_at;
+  const items = s.items || [];
+  const total = s.total_quantity ?? totalQty(items);
+  const status = pending
+    ? `${icon('clock')} ${s._error ? 'Erreur d’envoi, nouvel essai' : 'En attente d’envoi'}`
+    : esc(s.seller_name || '');
+  return `<a class="sale ${pending ? 'is-pending' : ''} ${isNew ? 'is-new' : ''} ${unread ? 'is-unread' : ''}" href="#/vente/${esc(s.id)}">
+    <div class="sale-top">
+      <span class="sale-client">${unread ? '<i class="new-tag">Nouvelle</i>' : ''}${esc(s.client_name)}</span>
+      <span class="sale-time">${showDate ? esc(fmtDate(when).slice(0, 5)) + ' · ' : ''}${esc(fmtTime(when))}</span>
+    </div>
+    ${s.plate ? `<div class="sale-mid">${plate(s.plate)}${s.observation ? '<span class="sale-obs">Observation</span>' : ''}</div>` : ''}
+    <div class="sale-lines">${items.slice(0, 2).map(itemLine).join('')}
+      ${items.length > 2 ? `<div class="sale-more">+ ${items.length - 2} autre${items.length - 2 > 1 ? 's' : ''} produit${items.length - 2 > 1 ? 's' : ''}</div>` : ''}</div>
+    <div class="sale-bot">
+      <span class="sale-total">${items.length > 1 ? `${items.length} produits, ${total} pièces` : ''}</span>
+      <span class="sale-seller">${status}</span>
+    </div>
+  </a>`;
+}
+
+function groupByDay(rows, key = 'sold_at') {
+  const groups = [];
+  for (const r of rows) {
+    const label = dayLabel(r[key]);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.rows.push(r);
+    else groups.push({ label, rows: [r] });
+  }
+  return groups;
+}
+
+return { topbar, updateNet, plate, swatch, totalQty, itemLine, itemBlock, saleCard, groupByDay };
+})();
+// ===== auth.js =====
+__m['auth'] = (() => {
+// Comptes : adresse e-mail + mot de passe.
+// Mot de passe oublié : un lien est envoyé par e-mail.
+const { sb } = __m['supabase'];
+
+function frError(err) {
+  const m = (err?.message || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Adresse e-mail ou mot de passe incorrect.';
+  if (m.includes('already') && m.includes('registered')) return 'Un compte existe déjà avec cette adresse. Touchez « J’ai déjà un compte ».';
+  if (m.includes('database error')) return 'Code d’équipe incorrect. Demandez-le à l’administrateur.';
+  if (m.includes('email') && m.includes('invalid')) return 'Adresse e-mail invalide.';
+  if (m.includes('signup') && m.includes('disabled')) return 'Les inscriptions sont désactivées dans Supabase.';
+  if (m.includes('should be different')) return 'Le nouveau mot de passe doit être différent de l’ancien.';
+  if (m.includes('password')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+  if (m.includes('rate limit') || m.includes('too many') || m.includes('security purposes')) return 'Trop de demandes. Patientez quelques minutes puis réessayez.';
+  if (m.includes('fetch') || m.includes('network')) return 'Pas de connexion Internet. Réessayez quand le réseau revient.';
+  return err?.message || 'Erreur inconnue.';
+}
+
+const cleanName = (n) => n.trim().replace(/\s+/g, ' ');
+const cleanEmail = (e) => e.trim().toLowerCase();
+const validEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
+async function signUp(name, email, password, team) {
+  const { data, error } = await sb.auth.signUp({
+    email: cleanEmail(email), password,
+    options: { data: { full_name: cleanName(name), team_code: team.trim() } },
+  });
+  if (error) throw new Error(frError(error));
+  if (!data.session) throw new Error('Compte créé, mais Supabase demande une confirmation par e-mail. Désactivez « Confirm email » (guide, étape 3), puis connectez-vous.');
+  return data;
+}
+
+async function signIn(email, password) {
+  const { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail(email), password });
+  if (error) throw new Error(frError(error));
+  return data;
+}
+
+// Envoie l'e-mail « mot de passe oublié » ; le lien ramène sur l'application
+async function sendReset(email) {
+  const redirectTo = location.origin + location.pathname;
+  const { error } = await sb.auth.resetPasswordForEmail(cleanEmail(email), { redirectTo });
+  if (error) throw new Error(frError(error));
+}
+
+async function changePassword(password) {
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) throw new Error(frError(error));
+}
+
+return { validEmail, signUp, signIn, sendReset, changePassword };
+})();
+// ===== push.js =====
+__m['push'] = (() => {
+// Notifications push (téléphones et ordinateurs du chef)
+const { sb } = __m['supabase'];
+const { CONFIG } = __m['config'];
+const { store } = __m['store'];
+
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushSupported = () =>
+  'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function swReady(ms = 6000) {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('Service worker indisponible')), ms)),
+  ]);
+}
+
+function keyToBytes(b64) {
+  const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+
+// 'ios-install' | 'unsupported' | 'not-configured' | 'denied' | 'on' | 'off'
+async function pushState() {
+  if (isIOS() && !isStandalone()) return 'ios-install';
+  if (!pushSupported()) return 'unsupported';
+  if (!CONFIG.VAPID_PUBLIC_KEY) return 'not-configured';
+  if (Notification.permission === 'denied') return 'denied';
+  try {
+    const reg = await swReady();
+    const sub = await reg.pushManager.getSubscription();
+    return sub && Notification.permission === 'granted' ? 'on' : 'off';
+  } catch { return 'unsupported'; }
+}
+
+async function saveSubscription(sub) {
+  const j = sub.toJSON();
+  const { error } = await sb.from('push_subscriptions').upsert({
+    endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth,
+    user_id: store.profile.id, user_agent: navigator.userAgent.slice(0, 200),
+  }, { onConflict: 'endpoint' });
+  if (error) throw error;
+}
+
+async function enablePush() {
+  // Doit rester la première instruction (appel direct depuis le bouton)
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Autorisation refusée sur cet appareil.');
+  const reg = await swReady();
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true, applicationServerKey: keyToBytes(CONFIG.VAPID_PUBLIC_KEY),
+    });
+  }
+  await saveSubscription(sub);
+}
+
+// Au démarrage : réenregistre l'abonnement s'il existe (au cas où il aurait changé)
+async function refreshPush() {
+  try {
+    if (!pushSupported() || Notification.permission !== 'granted') return;
+    const reg = await swReady();
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) await saveSubscription(sub);
+  } catch (e) { console.warn('push', e); }
+}
+
+async function disablePush() {
+  if (!pushSupported()) return;
+  const reg = await swReady().catch(() => null);
+  const sub = await reg?.pushManager.getSubscription();
+  if (!sub) return;
+  await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+  await sub.unsubscribe();
+}
+
+async function testNotification() {
+  const reg = await swReady();
+  await reg.showNotification('🔔 Test de notification', {
+    body: 'Les nouvelles ventes arriveront comme ceci.',
+    icon: 'icon-192.png', badge: 'badge-96.png', tag: 'test',
+  });
+}
+
+return { isIOS, isStandalone, pushSupported, pushState, enablePush, refreshPush, disablePush, testNotification };
+})();
+// ===== sons.js =====
+__m['sons'] = (() => {
+// =====================================================================
+//  Sons d'alerte doux, fabriqués par le navigateur (aucun fichier audio).
+//  Joués quand une vente arrive et que l'application est ouverte.
+//  Appli fermée : le téléphone utilise son propre son de notification.
+// =====================================================================
+let ctx = null;
+
+function audio() {
+  if (!ctx) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    ctx = new C();
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+// iPhone : le son n'est autorisé qu'après un premier toucher dans l'appli
+function unlockAudio() {
+  const once = () => {
+    const c = audio();
+    if (c) { // petit silence pour « débloquer » le son
+      const b = c.createBuffer(1, 1, 22050); const s = c.createBufferSource();
+      s.buffer = b; s.connect(c.destination); s.start(0);
+    }
+    document.removeEventListener('pointerdown', once, true);
+  };
+  document.addEventListener('pointerdown', once, true);
+}
+
+// Une note douce : montée rapide, extinction lente
+function note(c, out, { f, f2 = null, t, dur, type = 'sine', gain = 0.5, attack = 0.015 }) {
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur * 0.6);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(out);
+  o.start(t);
+  o.stop(t + dur + 0.05);
+}
+
+const SOUNDS = {
+  carillon: {
+    label: 'Carillon doux',
+    play(c, out, t) {
+      [[659.25, 0], [783.99, 0.2], [1046.5, 0.4]].forEach(([f, d]) => {
+        note(c, out, { f, t: t + d, dur: 1.8, gain: 0.45 });
+        note(c, out, { f: f * 2, t: t + d, dur: 0.9, gain: 0.06 });
+      });
+    },
+  },
+  cloche: {
+    label: 'Petite cloche',
+    play(c, out, t) {
+      note(c, out, { f: 880, t, dur: 2.4, gain: 0.5 });
+      note(c, out, { f: 1318.5, t, dur: 1.6, gain: 0.12 });
+      note(c, out, { f: 2217, t, dur: 0.8, gain: 0.04 });
+    },
+  },
+  goutte: {
+    label: 'Goutte d’eau',
+    play(c, out, t) {
+      note(c, out, { f: 1400, f2: 700, t, dur: 0.35, gain: 0.5, attack: 0.005 });
+      note(c, out, { f: 1200, f2: 650, t: t + 0.28, dur: 0.4, gain: 0.3, attack: 0.005 });
+    },
+  },
+  bois: {
+    label: 'Bois doux',
+    play(c, out, t) {
+      note(c, out, { f: 520, f2: 480, t, dur: 0.35, type: 'triangle', gain: 0.6, attack: 0.003 });
+      note(c, out, { f: 780, f2: 720, t: t + 0.16, dur: 0.4, type: 'triangle', gain: 0.45, attack: 0.003 });
+    },
+  },
+  harpe: {
+    label: 'Harpe',
+    play(c, out, t) {
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(c, out, { f, t: t + i * 0.1, dur: 1.4, type: 'triangle', gain: 0.3 }));
+    },
+  },
+  aucun: { label: 'Aucun son', play() {} },
+};
+
+const getSound = () => (SOUNDS[localStorage.getItem('scierie-son')] ? localStorage.getItem('scierie-son') : 'carillon');
+const getVolume = () => {
+  const v = Number(localStorage.getItem('scierie-volume'));
+  return Number.isFinite(v) && localStorage.getItem('scierie-volume') !== null ? v : 70;
+};
+const setSound = (name) => localStorage.setItem('scierie-son', name);
+const setVolume = (v) => localStorage.setItem('scierie-volume', String(v));
+
+function playSound(name = getSound(), volume = getVolume()) {
+  if (name === 'aucun' || volume <= 0) return;
+  const c = audio();
+  if (!c) return;
+  const out = c.createGain();
+  out.gain.value = Math.pow(volume / 100, 1.6); // réglage plus progressif à bas volume
+  out.connect(c.destination);
+  SOUNDS[name]?.play(c, out, c.currentTime + 0.03);
+}
+
+return { unlockAudio, SOUNDS, getSound, getVolume, setSound, setVolume, playSound };
+})();
+// ===== views/notifications.js =====
+__m['notifications'] = (() => {
+// Notifications de l'administrateur : activation sur l'appareil + fil des ventes de l'équipe
+const { sb } = __m['supabase'];
+const { store, on, isUnread, loadReads } = __m['store'];
+const { icon, toast, debounce } = __m['ui'];
+const { topbar, saleCard } = __m['components'];
+const { pushState, enablePush, disablePush, testNotification } = __m['push'];
+
+const PUSH_TEXT = {
+  'ios-install': `<h2>Recevoir les ventes sur cet iPhone</h2>
+    <p class="muted">Sur iPhone, les notifications marchent uniquement depuis l’application installée : dans Safari, touchez <b>Partager</b>, puis <b>Sur l’écran d’accueil</b>. Ouvrez ensuite l’application depuis sa nouvelle icône et revenez sur cet écran.</p>`,
+  unsupported: `<h2>Notifications indisponibles ici</h2>
+    <p class="muted">Ce navigateur ne gère pas les notifications. Utilisez Chrome sur Android ou sur ordinateur, ou l’application installée sur iPhone.</p>`,
+  'not-configured': `<h2>Notifications pas encore configurées</h2>
+    <p class="muted">La clé de notification n’est pas renseignée dans js/config.js (guide d’installation, étape 5).</p>`,
+  denied: `<h2>Notifications bloquées</h2>
+    <p class="muted">Elles ont été refusées sur cet appareil. Autorisez-les dans les réglages du téléphone ou du navigateur pour ce site, puis revenez ici.</p>`,
+  off: `<h2>Être prévenu à chaque vente</h2>
+    <p class="muted">Activez les notifications sur cet appareil : chaque nouvelle vente de l’équipe arrivera, même téléphone verrouillé.</p>
+    <button class="btn btn-primary btn-xl btn-block" data-on>${icon('bell')} Activer les notifications</button>`,
+  on: `<div class="push-on"><span class="ok-dot">${icon('check')}</span>
+      <div><h2>Notifications activées</h2><p class="muted">Cet appareil reçoit chaque nouvelle vente de l’équipe. Le son se règle dans <a href="#/profil">Mon profil</a>.</p></div></div>
+    <div class="row-actions"><button class="btn btn-ghost" data-test>Tester l’affichage</button>
+      <button class="btn btn-quiet" data-off>Désactiver</button></div>`,
+};
+
+function render(root) {
+  root.innerHTML = `${topbar('Notifications')}
+  <section class="card push-card" data-push><div class="skel"></div></section>
+  <h2 class="pill-title">Ventes de l’équipe</h2>
+  <div class="sale-list" data-feed><div class="skel"></div><div class="skel"></div></div>`;
+
+  const box = root.querySelector('[data-push]');
+  const feed = root.querySelector('[data-feed]');
+
+  async function drawPush() {
+    box.innerHTML = PUSH_TEXT[await pushState()];
+    box.querySelector('[data-on]')?.addEventListener('click', (e) => {
+      const b = e.currentTarget;
+      b.disabled = true; b.classList.add('loading');
+      enablePush()
+        .then(() => toast('Notifications activées', 'ok'))
+        .catch((err) => toast(err.message || 'Activation impossible', 'error', 5000))
+        .finally(drawPush);
+    });
+    box.querySelector('[data-test]')?.addEventListener('click', () =>
+      testNotification().catch((err) => toast(err.message, 'error')));
+    box.querySelector('[data-off]')?.addEventListener('click', async () => {
+      await disablePush().catch(() => {});
+      toast('Notifications désactivées sur cet appareil');
+      drawPush();
+    });
+  }
+
+  async function loadFeed() {
+    const { data, error } = await sb.from('sales').select('*').neq('seller_id', store.profile.id)
+      .order('created_at', { ascending: false }).limit(50);
+    if (error) { feed.innerHTML = '<p class="empty card">Chargement impossible pour le moment.</p>'; return; }
+    await loadReads(data);
+    feed.innerHTML = data.length
+      ? data.map((s) => saleCard(s, { unread: isUnread(s), showDate: true })).join('')
+      : '<p class="empty card">Aucune vente de l’équipe pour l’instant.</p>';
+  }
+
+  drawPush();
+  loadFeed();
+  const reload = debounce(loadFeed, 300);
+  return on((t) => { if (t === 'sale' || t === 'refresh' || t === 'read') reload(); });
+}
+
+return { render };
+})();
+// ===== views/connexion.js =====
+__m['connexion'] = (() => {
+// Inscription, connexion, mot de passe oublié, nouveau mot de passe
+const { CONFIG } = __m['config'];
+const { esc } = __m['ui'];
+const { signUp, signIn, sendReset, changePassword, validEmail } = __m['auth'];
+
+const brand = () => `<div class="brand">
+  <span class="log-end log-end-sm" aria-hidden="true"></span>
+  <div><h1>${esc(CONFIG.NOM_SCIERIE)}</h1><p>Registre des ventes de bois</p></div></div>`;
+
+const pwField = (label, auto) => `<label class="field"><span class="lbl">${label}</span>
+  <span class="pw"><input class="input" name="password" type="password" autocomplete="${auto}" minlength="6" required placeholder="6 caractères min.">
+  <button type="button" class="pw-toggle" data-pw>Afficher</button></span></label>`;
+
+const emailField = () => `<label class="field"><span class="lbl">Adresse e-mail</span>
+  <input class="input" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" required placeholder="jean.dupont@exemple.fr"></label>`;
+
+function render(root, { onDone, mode: startMode }) {
+  let mode = startMode || (localStorage.getItem('scierie-known') ? 'login' : 'signup');
+
+  function draw() {
+    const tabs = mode === 'signup' || mode === 'login';
+    let body = '';
+    if (mode === 'signup') body = `
+      <label class="field"><span class="lbl">Prénom et nom</span>
+        <input class="input" name="name" autocomplete="name" autocapitalize="words" required placeholder="Ex. : Jean DUPONT"></label>
+      ${emailField()}
+      ${pwField('Mot de passe', 'new-password')}
+      <label class="field"><span class="lbl">Code de l’équipe</span>
+        <input class="input input-caps" name="team" autocapitalize="characters" autocorrect="off" spellcheck="false" required placeholder="Donné par l’administrateur"></label>`;
+    if (mode === 'login') body = `${emailField()}${pwField('Mot de passe', 'current-password')}`;
+    if (mode === 'forgot') body = `<p class="muted">Indiquez l’adresse e-mail du compte. Vous recevrez un lien pour choisir un nouveau mot de passe.</p>${emailField()}`;
+    if (mode === 'reset') body = `<p class="muted">Choisissez votre nouveau mot de passe.</p>${pwField('Nouveau mot de passe', 'new-password')}`;
+    const submit = { signup: 'Créer mon compte', login: 'Me connecter', forgot: 'Recevoir le lien', reset: 'Enregistrer le mot de passe' }[mode];
+
+    root.innerHTML = `<main class="auth">${brand()}<section class="card">
+      ${tabs ? `<div class="seg seg-2" role="tablist">
+        <button type="button" data-mode="signup" class="${mode === 'signup' ? 'on' : ''}">Première fois</button>
+        <button type="button" data-mode="login" class="${mode === 'login' ? 'on' : ''}">J’ai déjà un compte</button></div>`
+        : `<h2>${mode === 'forgot' ? 'Mot de passe oublié' : 'Nouveau mot de passe'}</h2>`}
+      <form class="auth-form" novalidate>
+        ${body}
+        <p class="form-error" role="alert" hidden></p>
+        <p class="form-ok" hidden></p>
+        <button class="btn btn-primary btn-xl" type="submit">${submit}</button>
+      </form>
+      ${mode === 'login' ? '<button class="btn btn-quiet btn-block link-btn" data-mode="forgot">Mot de passe oublié ?</button>' : ''}
+      ${mode === 'forgot' ? '<button class="btn btn-quiet btn-block link-btn" data-mode="login">Retour à la connexion</button>' : ''}
+      ${mode === 'signup' ? '<p class="hint">Votre adresse e-mail sert à vous connecter sur n’importe quel téléphone et à recevoir un lien si vous oubliez votre mot de passe.</p>' : ''}
+    </section></main>`;
+
+    root.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { mode = b.dataset.mode; draw(); });
+    root.querySelector('[data-pw]')?.addEventListener('click', (e) => {
+      const i = root.querySelector('[name=password]');
+      i.type = i.type === 'password' ? 'text' : 'password';
+      e.currentTarget.textContent = i.type === 'password' ? 'Afficher' : 'Masquer';
+    });
+
+    const form = root.querySelector('form');
+    const err = form.querySelector('.form-error');
+    const ok = form.querySelector('.form-ok');
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      err.hidden = true; ok.hidden = true;
+      const v = (n) => form.elements[n]?.value || '';
+      const fail = (m) => { err.textContent = m; err.hidden = false; };
+      if (mode === 'signup' && v('name').trim().length < 2) return fail('Indiquez votre prénom et votre nom.');
+      if (mode !== 'reset' && !validEmail(v('email'))) return fail('Indiquez une adresse e-mail valide.');
+      if ((mode === 'signup' || mode === 'login' || mode === 'reset') && v('password').length < 6) return fail('Le mot de passe doit contenir au moins 6 caractères.');
+      if (mode === 'signup' && !v('team').trim()) return fail('Indiquez le code de l’équipe (demandez-le à l’administrateur).');
+      const btn = form.querySelector('[type=submit]');
+      btn.disabled = true; btn.classList.add('loading');
+      try {
+        if (mode === 'signup') await signUp(v('name'), v('email'), v('password'), v('team'));
+        if (mode === 'login') await signIn(v('email'), v('password'));
+        if (mode === 'forgot') {
+          await sendReset(v('email'));
+          ok.textContent = 'C’est envoyé. Ouvrez l’e-mail reçu (pensez aux spams) et touchez le lien.';
+          ok.hidden = false;
+          btn.disabled = false; btn.classList.remove('loading');
+          return;
+        }
+        if (mode === 'reset') await changePassword(v('password'));
+        localStorage.setItem('scierie-known', '1');
+        onDone();
+      } catch (ex) {
+        fail(ex.message);
+        btn.disabled = false; btn.classList.remove('loading');
+      }
+    };
+  }
+  draw();
+}
+
+return { render };
+})();
+// ===== views/accueil.js =====
+__m['accueil'] = (() => {
+// Accueil : Nouvelle vente en grand, accès rapides, ventes du jour
+const { sb } = __m['supabase'];
+const { store, on, pendingMine, isUnread, loadReads, unreadCount } = __m['store'];
+const { esc, icon, debounce, startOfDay, plural } = __m['ui'];
+const { saleCard } = __m['components'];
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+}
+
+function render(root) {
+  const p = store.profile;
+  const chef = p.role === 'chef';
+  const first = p.full_name.split(' ')[0];
+
+  root.innerHTML = `
+  <header class="home-head">
+    <div><p class="hello">${greeting()},</p><h1 class="home-name">${esc(first)}</h1></div>
+    <span class="net" data-net></span>
+  </header>
+  <div class="home-grid">
+    <div class="home-main">
+      <a href="#/nouvelle" class="log-cta">
+        <span class="log-end" aria-hidden="true">${icon('plus')}</span>
+        <span class="log-text"><strong>Nouvelle vente</strong><span>Enregistrer une sortie de bois</span></span>
+      </a>
+      <nav class="tiles">
+        <a class="tile" href="#/historique">${icon('list')}<span>Dernières ventes</span><b class="badge badge-new" data-unread hidden></b></a>
+        <a class="tile" href="#/profil">${icon('user')}<span>Mon profil</span></a>
+        ${chef ? `
+        <a class="tile" href="#/notifications">${icon('bell')}<span>Notifications</span></a>
+        <a class="tile" href="#/admin">${icon('gear')}<span>Administration</span><b class="badge" data-pending hidden></b></a>` : ''}
+        <a class="tile" href="#/stats">${icon('chart')}<span>Statistiques</span></a>
+      </nav>
+    </div>
+    <section class="card today">
+      <div class="today-head"><h2>Aujourd’hui</h2><p class="today-stat" data-stat></p></div>
+      <div class="sale-list" data-list><div class="skel"></div><div class="skel"></div></div>
+      <a class="more-link" href="#/historique">Voir toutes les ventes</a>
+    </section>
+  </div>`;
+
+  const list = root.querySelector('[data-list]');
+  const stat = root.querySelector('[data-stat]');
+  const badge = root.querySelector('[data-unread]');
+
+  async function load() {
+    const pend = pendingMine();
+    const { data, error } = await sb.from('sales').select('*')
+      .gte('sold_at', startOfDay().toISOString())
+      .order('sold_at', { ascending: false }).limit(300);
+    if (error) {
+      list.innerHTML = pend.map((s) => saleCard(s, { pending: true })).join('') +
+        `<p class="empty">${navigator.onLine ? 'Chargement impossible pour le moment.' : 'Hors ligne : les ventes de l’équipe s’afficheront au retour du réseau.'}</p>`;
+      return;
+    }
+    const pieces = data.reduce((a, s) => a + (s.total_quantity || 0), 0);
+    stat.textContent = data.length ? `${plural(data.length, 'vente', 'ventes')}, ${pieces} pièces` : '';
+    const shown = data.slice(0, 6);
+    await loadReads(shown);
+    list.innerHTML = pend.map((s) => saleCard(s, { pending: true })).join('') +
+      (shown.length ? shown.map((s) => saleCard(s, { unread: isUnread(s) })).join('')
+        : pend.length ? '' : '<p class="empty">Pas encore de vente aujourd’hui.</p>');
+    const n = await unreadCount();
+    badge.hidden = !n; badge.textContent = n > 99 ? '99+' : n;
+    badge.title = 'Ventes pas encore consultées';
+    if (chef) {
+      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).eq('approved', false);
+      const pb = root.querySelector('[data-pending]');
+      if (pb) { pb.hidden = !count; pb.textContent = count; pb.title = 'Comptes à valider'; }
+    }
+  }
+
+  const reload = debounce(load, 300);
+  load();
+  return on((t) => { if (t === 'sale' || t === 'refresh' || t === 'outbox' || t === 'read') reload(); });
+}
+
+return { render };
+})();
+// ===== views/vente.js =====
+__m['vente'] = (() => {
+// =====================================================================
+//  Nouvelle vente : client + produits (autant qu'on veut) → récapitulatif
+//  → confirmation. Également utilisé par l'administrateur pour modifier.
+// =====================================================================
+const { sb } = __m['supabase'];
+const { store, on, addSale, activeSpecies, activeGrades, activeOptions } = __m['store'];
+const { esc, icon, toast, fmtDate, fmtTime, fmtLength, parseLength, uuid, dialog, plural } = __m['ui'];
+const { topbar, swatch, plate: plateChip, itemBlock, totalQty } = __m['components'];
+
+const DRAFT_KEY = 'scierie-brouillon-v3';
+const EDIT_WINDOW = 15 * 60 * 1000; // le vendeur peut corriger sa vente pendant 15 minutes
+const ITEM_FIELDS = ['sec', 'length_m', 'quantity', 'species', 'grade']; // options et colis : facultatifs
+const LABELS = { client_name: 'client', plate: 'plaque', sec: 'section', length_m: 'longueur', quantity: 'quantité', species: 'essence', grade: 'choix' };
+// Référence colis : 2030481 → 203-048-1 (le tiret apparaît dès le chiffre suivant)
+const formatRef = (v) => {
+  const d = String(v).replace(/\D/g, '').slice(0, 7);
+  return d.slice(0, 3) + (d.length > 3 ? `-${d.slice(3, 6)}` : '') + (d.length > 6 ? `-${d.slice(6)}` : '');
+};
+const REF_OK = /^\d{3}-\d{3}-\d$/;
+let clientIndex = null; // clients déjà connus → écriture d'origine + dernière plaque
+const clientKey = (n) => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+const emptyItem = (prev) => ({ sec_a: '', sec_b: '', length_m: '', quantity: '', species: prev?.species || '', grade: prev?.grade || '', options: [], package_ref: '' });
+const emptyDraft = () => ({ id: null, client_name: '', plate: '', observation: '', items: [emptyItem()] });
+function readDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    if (d && Array.isArray(d.items) && d.items.length) return { ...emptyDraft(), ...d };
+  } catch { /* brouillon illisible */ }
+  return emptyDraft();
+}
+
+const normItem = (it) => ({
+  section: `${parseInt(it.sec_a, 10)}x${parseInt(it.sec_b, 10)}`,
+  length_m: Math.round(parseLength(it.length_m) * 100) / 100,
+  quantity: parseInt(it.quantity, 10),
+  species: it.species,
+  grade: it.grade,
+  options: [...(it.options || [])],
+  package_ref: formatRef(it.package_ref),
+});
+
+function render(root, { params }) {
+  const editId = params[0] || null;
+  let draft = editId ? emptyDraft() : readDraft();
+  let original = null;
+  let step = 'form';
+  let busy = false;
+  let autoPlate = false;
+
+  const saveDraft = () => { if (!editId) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); };
+  const hasContent = () => draft.client_name || draft.plate || draft.observation ||
+    draft.items.some((it) => it.sec_a || it.sec_b || it.length_m || it.quantity || it.package_ref);
+  const names = (list, current) => {
+    const n = list.map((x) => x.name);
+    for (const c of [].concat(current || [])) if (c && !n.includes(c)) n.push(c);
+    return n;
+  };
+
+  // ---------- Boutons de sélection ----------
+  const speciesButtons = (it) => names(activeSpecies(), it.species).map((n) =>
+    `<button type="button" class="pick-btn ${n === it.species ? 'on' : ''}" data-pick="species" data-v="${esc(n)}" aria-pressed="${n === it.species}">${swatch(n)}<span>${esc(n)}</span></button>`).join('');
+  const gradeButtons = (it) => names(activeGrades(), it.grade).map((n) =>
+    `<button type="button" class="stamp ${n === it.grade ? 'on' : ''}" data-pick="grade" data-v="${esc(n)}" aria-pressed="${n === it.grade}">${esc(n)}</button>`).join('');
+  const optionButtons = (it) => names(activeOptions(), it.options).map((n) => {
+    const onb = it.options.includes(n);
+    return `<button type="button" class="opt-btn ${onb ? 'on' : ''}" data-pick="options" data-v="${esc(n)}" aria-pressed="${onb}">${esc(n)}</button>`;
+  }).join('') || '<span class="muted">Aucune option définie</span>';
+
+  // ---------- Un produit ----------
+  const itemCard = (it, i, n) => `
+  <section class="card item-card" data-item="${i}">
+    <div class="item-head">
+      <h2>${n > 1 ? `Produit ${i + 1}` : 'Produit'}</h2>
+      ${n > 1 ? `<button type="button" class="btn btn-sm btn-quiet" data-remove>${icon('trash')} Retirer</button>` : ''}
+    </div>
+    <div class="fields">
+      <div class="field-row">
+        <div class="field" data-f="sec"><span class="lbl">Section (mm)</span>
+          <div class="sec-pair">
+            <input class="input input-sec" data-k="sec_a" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="next" placeholder="27" aria-label="Épaisseur en millimètres" value="${esc(it.sec_a)}">
+            <span class="sec-x" aria-hidden="true">×</span>
+            <input class="input input-sec" data-k="sec_b" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="next" placeholder="150" aria-label="Largeur en millimètres" value="${esc(it.sec_b)}">
+          </div></div>
+        <label class="field" data-f="length_m"><span class="lbl">Longueur</span>
+          <span class="unit-input"><input class="input" data-k="length_m" inputmode="decimal" enterkeyhint="next" placeholder="ex. 4,00" value="${esc(it.length_m)}"><i>m</i></span></label>
+      </div>
+      <div class="field" data-f="quantity"><span class="lbl">Quantité (pièces)</span>
+        <div class="stepper stepper-wide">
+          <button type="button" class="step" data-step="-1" aria-label="Retirer une pièce">−</button>
+          <input class="input input-qty" data-k="quantity" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" placeholder="0" aria-label="Quantité" value="${esc(it.quantity)}">
+          <button type="button" class="step" data-step="1" aria-label="Ajouter une pièce">+</button>
+        </div></div>
+      <div class="field" data-f="species"><span class="lbl">Essence</span>
+        <div class="pick pick-species" data-box="species">${speciesButtons(it)}</div></div>
+      <div class="field" data-f="grade"><span class="lbl">Choix</span>
+        <div class="pick pick-grade" data-box="grade">${gradeButtons(it)}</div></div>
+      <div class="field"><span class="lbl">Options <small class="lbl-soft">facultatif, plusieurs possibles</small></span>
+        <div class="pick pick-options" data-box="options">${optionButtons(it)}</div></div>
+      <label class="field" data-f="package_ref"><span class="lbl">Référence du colis <small class="lbl-soft">facultatif</small></span>
+        <input class="input input-ref" data-k="package_ref" inputmode="numeric" pattern="[0-9-]*" maxlength="9" autocomplete="off" enterkeyhint="next" placeholder="ex. 203-048-1" value="${esc(it.package_ref)}"></label>
+    </div>
+  </section>`;
+
+  const itemsHtml = () => draft.items.map((it, i) => itemCard(it, i, draft.items.length)).join('');
+
+  // ---------- Formulaire ----------
+  function drawForm() {
+    root.innerHTML = `${topbar(editId ? 'Modifier la vente' : 'Nouvelle vente')}
+    <form class="sale-form" novalidate autocomplete="off">
+      <section class="card fields">
+        <label class="field" data-f="client_name"><span class="lbl">Client</span>
+          <input class="input" name="client_name" list="dl-clients" autocapitalize="words" enterkeyhint="next" placeholder="Nom du client" value="${esc(draft.client_name)}"></label>
+        <label class="field" data-f="plate"><span class="lbl">Plaque d’immatriculation <small class="lbl-note" data-plate-hint hidden>habituelle du client</small></span>
+          <input class="input input-caps" name="plate" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="AB-123-CD" value="${esc(draft.plate)}"></label>
+      </section>
+      <div class="items" data-items>${itemsHtml()}</div>
+      <button type="button" class="btn btn-add btn-xl btn-block" data-add>${icon('plus')} Ajouter un produit</button>
+      <section class="card">
+        <label class="field"><span class="lbl">Observation <small class="lbl-soft">facultatif</small></span>
+          <textarea class="input textarea" name="observation" rows="3" maxlength="1000" placeholder="Un détail à signaler sur cette vente">${esc(draft.observation)}</textarea></label>
+      </section>
+      <p class="form-error" role="alert" hidden></p>
+      <div class="sticky-actions">
+        ${!editId && hasContent() ? '<button type="button" class="btn btn-quiet" data-clear>Effacer</button>' : ''}
+        <button type="submit" class="btn btn-primary btn-xl">Vérifier la vente</button>
+      </div>
+    </form>
+    <datalist id="dl-clients">${(clientIndex?.names || []).map((n) => `<option value="${esc(n)}">`).join('')}</datalist>`;
+    bindForm();
+  }
+
+  function redrawItems(focusIndex = null) {
+    const box = root.querySelector('[data-items]');
+    box.innerHTML = itemsHtml();
+    if (focusIndex != null) {
+      const card = box.querySelector(`[data-item="${focusIndex}"]`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => card?.querySelector('[data-k=sec_a]')?.focus({ preventScroll: true }), 350);
+    }
+  }
+
+  function bindForm() {
+    const form = root.querySelector('form');
+    const hint = form.querySelector('[data-plate-hint]');
+    const itemOf = (el) => { const c = el.closest('[data-item]'); return c ? Number(c.dataset.item) : null; };
+
+    form.addEventListener('input', (e) => {
+      const el = e.target;
+      const i = itemOf(el);
+      if (i != null && el.dataset.k) {
+        const k = el.dataset.k;
+        if (k === 'package_ref') el.value = formatRef(el.value);
+        if (k === 'sec_a' || k === 'sec_b') el.value = el.value.replace(/\D/g, '').slice(0, 4);
+        if (k === 'quantity') el.value = el.value.replace(/\D/g, '').slice(0, 5);
+        if (k === 'length_m') el.value = el.value.replace('.', ',').replace(/[^\d,]/g, '').replace(/,(?=.*,)/g, '').slice(0, 6);
+        draft.items[i][k] = el.value;
+        el.closest('.field')?.classList.remove('invalid');
+      } else if (el.name in draft) {
+        if (el.name === 'plate') {
+          const pos = el.selectionStart;
+          el.value = el.value.toUpperCase();
+          try { el.setSelectionRange(pos, pos); } catch { /* ignoré */ }
+          autoPlate = false; hint.hidden = true;
+        }
+        draft[el.name] = el.value;
+        el.closest('.field')?.classList.remove('invalid');
+      }
+      saveDraft();
+    });
+
+    // Plaque proposée automatiquement : sélectionnée en entrant dans la case, pour que taper la remplace
+    const plateInput = form.elements.plate;
+    plateInput.addEventListener('focus', () => {
+      if (autoPlate) setTimeout(() => { try { plateInput.setSelectionRange(0, plateInput.value.length); } catch { plateInput.select(); } }, 0);
+    });
+
+    // Client déjà connu : on propose sa dernière plaque
+    form.elements.client_name.addEventListener('change', () => {
+      const known = clientIndex?.byKey.get(clientKey(draft.client_name))?.plate;
+      if (known && (!draft.plate || autoPlate)) {
+        draft.plate = known; form.elements.plate.value = known; autoPlate = true; hint.hidden = false;
+        // si on est déjà dans la case plaque, la plaque proposée est sélectionnée : taper la remplace
+        if (document.activeElement === form.elements.plate) setTimeout(() => form.elements.plate.select(), 0);
+        form.querySelector('[data-f=plate]').classList.remove('invalid');
+      } else if (!known && autoPlate) {
+        draft.plate = ''; form.elements.plate.value = ''; autoPlate = false; hint.hidden = true;
+      }
+      saveDraft();
+    });
+
+    // Entrée : passe au champ suivant
+    form.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+      e.preventDefault();
+      const inputs = [...form.querySelectorAll('input.input, textarea')];
+      const i = inputs.indexOf(e.target);
+      if (i >= 0 && i < inputs.length - 1) inputs[i + 1].focus(); else e.target.blur();
+    });
+
+    form.addEventListener('click', async (e) => {
+      const i = itemOf(e.target);
+      const st = e.target.closest('[data-step]');
+      if (st && i != null) {
+        const it = draft.items[i];
+        const q = Math.max(0, (parseInt(it.quantity, 10) || 0) + Number(st.dataset.step));
+        it.quantity = q ? String(q) : '';
+        st.parentElement.querySelector('[data-k=quantity]').value = it.quantity;
+        st.closest('.field').classList.remove('invalid');
+        saveDraft();
+        return;
+      }
+      const pk = e.target.closest('[data-pick]');
+      if (pk && i != null) {
+        const it = draft.items[i];
+        const kind = pk.dataset.pick, v = pk.dataset.v;
+        if (kind === 'options') it.options = it.options.includes(v) ? it.options.filter((o) => o !== v) : [...it.options, v];
+        else it[kind] = v;
+        const box = pk.closest('[data-box]');
+        box.innerHTML = kind === 'species' ? speciesButtons(it) : kind === 'grade' ? gradeButtons(it) : optionButtons(it);
+        box.closest('.field').classList.remove('invalid');
+        saveDraft();
+        return;
+      }
+      if (e.target.closest('[data-add]')) {
+        draft.items.push(emptyItem(draft.items[draft.items.length - 1]));
+        saveDraft();
+        redrawItems(draft.items.length - 1);
+        return;
+      }
+      if (e.target.closest('[data-remove]') && i != null) {
+        const it = draft.items[i];
+        const filled = it.sec_a || it.sec_b || it.length_m || it.quantity || it.package_ref;
+        if (filled && !(await dialog({ title: `Retirer le produit ${i + 1} ?`, message: 'Ce qui a été saisi pour ce produit sera effacé.', okLabel: 'Retirer', danger: true }))) return;
+        draft.items.splice(i, 1);
+        saveDraft();
+        redrawItems();
+        return;
+      }
+      if (e.target.closest('[data-clear]')) {
+        if (!(await dialog({ title: 'Tout effacer ?', message: 'Le client et tous les produits saisis seront effacés.', okLabel: 'Effacer', danger: true }))) return;
+        draft = emptyDraft(); autoPlate = false; saveDraft(); drawForm();
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      document.activeElement?.blur();
+      if (validate(form)) { step = 'recap'; drawRecap(); window.scrollTo(0, 0); }
+    });
+  }
+
+  function validate(form) {
+    const problems = [];
+    const head = [];
+    for (const f of ['client_name', 'plate']) {
+      const bad = !String(draft[f] || '').trim();
+      form.querySelector(`[data-f=${f}]`).classList.toggle('invalid', bad);
+      if (bad) head.push(LABELS[f]);
+    }
+    if (head.length) problems.push(head.join(', '));
+    draft.items.forEach((it, i) => {
+      const card = form.querySelector(`[data-item="${i}"]`);
+      const miss = [];
+      for (const f of ITEM_FIELDS) {
+        const v = String(it[f] ?? '').trim();
+        const len = parseLength(v);
+        const bad = f === 'quantity' ? !(parseInt(v, 10) > 0)
+          : f === 'length_m' ? !(len > 0 && len < 100)
+          : f === 'sec' ? !(parseInt(it.sec_a, 10) > 0 && parseInt(it.sec_b, 10) > 0)
+          : !v;
+        card.querySelector(`[data-f=${f}]`).classList.toggle('invalid', bad);
+        if (bad) miss.push(LABELS[f]);
+      }
+      const refBad = !!it.package_ref && !REF_OK.test(it.package_ref);
+      card.querySelector('[data-f=package_ref]').classList.toggle('invalid', refBad);
+      if (refBad) miss.push('référence colis incomplète (7 chiffres)');
+      if (miss.length) problems.push(`${draft.items.length > 1 ? `produit ${i + 1}` : 'produit'} : ${miss.join(', ')}`);
+    });
+    const err = form.querySelector('.form-error');
+    if (problems.length) {
+      err.textContent = `À compléter : ${problems.join(' ; ')}.`;
+      err.hidden = false;
+      form.querySelector('.invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    err.hidden = true;
+    return true;
+  }
+
+  // « menuiserie roux » tapé alors que « Menuiserie Roux » existe → on reprend l'écriture existante
+  const clientName = () => clientIndex?.byKey.get(clientKey(draft.client_name))?.name || draft.client_name.trim().replace(/\s+/g, ' ');
+  const payload = () => ({
+    client_name: clientName(),
+    plate: draft.plate.trim().toUpperCase(),
+    observation: draft.observation.trim(),
+    items: draft.items.map(normItem),
+  });
+
+  // ---------- Récapitulatif ----------
+  function drawRecap() {
+    const when = original?.sold_at || new Date();
+    const seller = original?.seller_name || store.profile.full_name;
+    const pl = payload();
+    const n = pl.items.length;
+    const row = (label, val) => `<div><dt>${label}</dt><dd>${val}</dd></div>`;
+    root.innerHTML = `${topbar(editId ? 'Vérifier les modifications' : 'Récapitulatif', { back: false })}
+    <section class="card recap">
+      <dl class="kv">
+        ${row('Client', esc(pl.client_name))}
+        ${row('Plaque', plateChip(pl.plate, 'plate-lg'))}
+      </dl>
+    </section>
+    <section class="card recap-items">
+      ${pl.items.map((it, i) => itemBlock(it, i, n)).join('')}
+      ${n > 1 ? `<p class="recap-total">Total : ${plural(n, 'produit', 'produits')}, ${totalQty(pl.items)} pièces</p>` : ''}
+    </section>
+    ${pl.observation ? `<section class="card"><p class="lbl">Observation</p><p class="obs-text">${esc(pl.observation)}</p></section>` : ''}
+    <section class="card">
+      <dl class="kv kv-soft-top">
+        ${row('Vendeur', esc(seller))}
+        ${row('Date', fmtDate(when))}
+        ${row('Heure', fmtTime(when))}
+      </dl>
+    </section>
+    <div class="recap-actions">
+      <button class="btn btn-ghost btn-xl" data-modify>${icon('edit')} Modifier</button>
+      <button class="btn btn-primary btn-xl" data-validate>${icon('check')} ${editId ? 'Enregistrer' : 'Valider la vente'}</button>
+    </div>`;
+
+    root.querySelector('[data-modify]').onclick = () => { step = 'form'; drawForm(); window.scrollTo(0, 0); };
+    root.querySelector('[data-validate]').onclick = async (e) => {
+      if (busy) return;
+      busy = true;
+      const b = e.currentTarget;
+      b.disabled = true; b.classList.add('loading');
+      try {
+        if (editId) {
+          const { data: upd, error } = await sb.from('sales').update(payload()).eq('id', editId).select('id');
+          if (error) throw error;
+          if (!upd?.length) throw new Error('le délai de 15 minutes est dépassé, seul l’administrateur peut encore modifier cette vente.');
+          toast('Vente modifiée', 'ok');
+          location.replace(`#/vente/${editId}`);
+        } else {
+          if (!draft.id) { draft.id = uuid(); saveDraft(); }
+          const sale = { id: draft.id, ...payload(), sold_at: new Date().toISOString() };
+          const sent = await addSale(sale);
+          localStorage.removeItem(DRAFT_KEY);
+          draft = emptyDraft(); autoPlate = false;
+          navigator.vibrate?.(40);
+          step = 'done';
+          drawDone(sale, sent);
+        }
+      } catch (err) {
+        toast(`Échec : ${err.message || err}`, 'error', 5000);
+        b.disabled = false; b.classList.remove('loading');
+      } finally { busy = false; }
+    };
+  }
+
+  // ---------- Confirmation ----------
+  function drawDone(s, sent) {
+    const n = s.items.length;
+    const one = s.items[0];
+    root.innerHTML = `
+    <section class="done">
+      <div class="done-mark">${icon('check')}</div>
+      <h1>Vente enregistrée <span class="done-emoji" aria-hidden="true">👌</span></h1>
+      ${sent ? '' : '<p class="done-sub">Pas de réseau pour l’instant : la vente est gardée sur ce téléphone et partira toute seule dès le retour d’Internet.</p>'}
+      <div class="done-recap card"><strong>${esc(s.client_name)}</strong>
+        <span>${n > 1 ? `${n} produits, ${totalQty(s.items)} pièces`
+          : `${esc(one.quantity)} pièces de ${esc(one.species)} ${esc(one.section)}, ${fmtLength(one.length_m)}, choix ${esc(one.grade)}`}</span></div>
+      <div class="done-actions">
+        <button class="btn btn-primary btn-xl" data-again>${icon('plus')} Nouvelle vente</button>
+        <a class="btn btn-ghost btn-xl" href="#/">Accueil</a>
+      </div>
+    </section>`;
+    root.querySelector('[data-again]').onclick = () => { step = 'form'; drawForm(); window.scrollTo(0, 0); };
+  }
+
+  async function loadClients() {
+    if (clientIndex && Date.now() - clientIndex.at < 5 * 60e3) return;
+    const { data } = await sb.from('sales').select('client_name, plate')
+      .order('sold_at', { ascending: false }).limit(3000);
+    if (!data) return;
+    const byKey = new Map(); const list = [];
+    for (const r of data) {
+      const k = clientKey(r.client_name);
+      if (!byKey.has(k)) { byKey.set(k, { name: r.client_name, plate: r.plate }); list.push(r.client_name); }
+    }
+    clientIndex = { names: list.slice(0, 400), byKey, at: Date.now() };
+    const dl = root.querySelector('#dl-clients');
+    if (dl) dl.innerHTML = clientIndex.names.map((n) => `<option value="${esc(n)}">`).join('');
+  }
+
+  // ---------- Démarrage ----------
+  if (editId) {
+    root.innerHTML = `${topbar('Modifier la vente')}<div class="card"><div class="skel"></div><div class="skel"></div></div>`;
+    sb.from('sales').select('*').eq('id', editId).maybeSingle().then(({ data }) => {
+      if (!data) { root.innerHTML = `${topbar('Modifier la vente')}<p class="empty card">Vente introuvable.</p>`; return; }
+      const mine = data.seller_id === store.profile.id;
+      const left = EDIT_WINDOW - (Date.now() - new Date(data.created_at).getTime());
+      if (store.profile.role !== 'chef' && !(mine && left > 0)) {
+        root.innerHTML = `${topbar('Modifier la vente')}<p class="empty card">${mine
+          ? 'Le délai de 15 minutes pour corriger cette vente est dépassé. Demandez à l’administrateur de la modifier.'
+          : 'Seul l’administrateur ou le vendeur (pendant 15 minutes) peut modifier cette vente.'}</p>`;
+        return;
+      }
+      original = data;
+      draft = {
+        id: data.id, client_name: data.client_name, plate: data.plate, observation: data.observation || '',
+        items: (data.items || []).map((it) => ({
+          sec_a: (String(it.section).match(/^(\d+)x/) || [])[1] || '', sec_b: (String(it.section).match(/x(\d+)$/) || [])[1] || '',
+          length_m: fmtLength(it.length_m, false), quantity: String(it.quantity),
+          species: it.species, grade: it.grade, options: [...(it.options || [])], package_ref: it.package_ref || '',
+        })),
+      };
+      if (!draft.items.length) draft.items = [emptyItem()];
+      drawForm();
+      loadClients();
+    });
+  } else {
+    drawForm();
+    loadClients();
+  }
+
+  // L'administrateur change les essences / choix / options : les boutons se mettent à jour
+  return on((t) => {
+    if (t !== 'refs' || step !== 'form') return;
+    root.querySelectorAll('[data-item]').forEach((card) => {
+      const it = draft.items[Number(card.dataset.item)];
+      if (!it) return;
+      card.querySelector('[data-box=species]').innerHTML = speciesButtons(it);
+      card.querySelector('[data-box=grade]').innerHTML = gradeButtons(it);
+      card.querySelector('[data-box=options]').innerHTML = optionButtons(it);
+    });
+  });
+}
+
+return { EDIT_WINDOW, formatRef, render };
+})();
+// ===== views/detail.js =====
+__m['detail'] = (() => {
+// Détail d'une vente (ouvert aussi depuis la notification de l'administrateur)
+const { sb } = __m['supabase'];
+const { store, on, pendingMine, markRead } = __m['store'];
+const { esc, icon, toast, fmtDate, fmtTime, dialog, plural } = __m['ui'];
+const { topbar, plate, itemBlock, totalQty } = __m['components'];
+const { EDIT_WINDOW } = __m['vente'];
+
+function render(root, { params: [id] }) {
+  const chef = store.profile.role === 'chef';
+  root.innerHTML = `${topbar('Détail de la vente')}<div data-body><div class="card"><div class="skel"></div><div class="skel"></div></div></div>`;
+  const body = root.querySelector('[data-body]');
+
+  async function load() {
+    const pending = pendingMine().find((s) => s.id === id);
+    if (pending) return draw(pending, true);
+    const { data, error } = await sb.from('sales').select('*').eq('id', id).maybeSingle();
+    if (error) {
+      body.innerHTML = `<p class="empty card">${navigator.onLine ? 'Chargement impossible.' : 'Hors ligne : le détail s’affichera au retour du réseau.'}</p>`;
+      return;
+    }
+    if (!data) { body.innerHTML = '<p class="empty card">Cette vente n’existe plus. Elle a peut-être été supprimée par l’administrateur.</p>'; return; }
+    draw(data, false);
+    markRead(data);
+  }
+
+  let expiry = null;
+  function draw(s, pending) {
+    const when = s.sold_at || s._queued_at;
+    const mine = !pending && s.seller_id === store.profile.id;
+    const left = pending ? 0 : EDIT_WINDOW - (Date.now() - new Date(s.created_at).getTime());
+    const sellerCanEdit = !chef && mine && left > 0;
+    clearTimeout(expiry);
+    if (sellerCanEdit) expiry = setTimeout(load, left + 1000);
+    const items = s.items || [];
+    const n = items.length;
+    const row = (l, v) => `<div><dt>${l}</dt><dd>${v}</dd></div>`;
+    body.innerHTML = `
+    <article class="card detail">
+      <header class="detail-head">
+        <h2 class="detail-client">${esc(s.client_name)}</h2>
+        ${s.plate ? plate(s.plate, 'plate-lg') : ''}
+      </header>
+      ${n > 1 ? `<p class="recap-total recap-total-top">${plural(n, 'produit', 'produits')}, ${s.total_quantity ?? totalQty(items)} pièces au total</p>` : ''}
+    </article>
+    <section class="card recap-items">${items.map((it, i) => itemBlock(it, i, n)).join('')}</section>
+    ${s.observation ? `<section class="card"><p class="lbl">Observation</p><p class="obs-text">${esc(s.observation)}</p></section>` : ''}
+    <section class="card">
+      <dl class="kv">
+        ${row('Vendeur', esc(pending ? store.profile.full_name : s.seller_name))}
+        ${row('Date', fmtDate(when))}
+        ${row('Heure', fmtTime(when))}
+      </dl>
+      ${pending
+        ? `<p class="meta warn">${icon('clock')} En attente d’envoi : elle partira dès le retour du réseau.</p>`
+        : `<p class="meta">Reçue par le serveur le ${fmtDate(s.created_at)} à ${fmtTime(s.created_at)}.${s.updated_at ? ` Modifiée le ${fmtDate(s.updated_at)} à ${fmtTime(s.updated_at)}.` : ''}</p>`}
+    </section>
+    ${sellerCanEdit ? `
+    <a class="btn btn-ghost btn-xl btn-block" href="#/modifier/${esc(s.id)}">${icon('edit')} Corriger ma vente</a>
+    <p class="pill-note">Possible encore ${Math.max(1, Math.ceil(left / 60000))} min. Ensuite, seul l’administrateur pourra la modifier.</p>` : ''}
+    ${chef && !pending ? `
+    <div class="recap-actions">
+      <a class="btn btn-ghost btn-xl" href="#/modifier/${esc(s.id)}">${icon('edit')} Modifier</a>
+      <button class="btn btn-danger-ghost btn-xl" data-del>${icon('trash')} Supprimer</button>
+    </div>` : ''}`;
+
+    body.querySelector('[data-del]')?.addEventListener('click', async () => {
+      const ok = await dialog({ title: 'Supprimer cette vente ?', message: `${s.client_name}, ${plural(n, 'produit', 'produits')}. Cette action est définitive pour toute l’équipe.`, okLabel: 'Supprimer', danger: true });
+      if (!ok) return;
+      const { error } = await sb.from('sales').delete().eq('id', s.id);
+      if (error) return toast(`Échec : ${error.message}`, 'error');
+      toast('Vente supprimée', 'ok');
+      location.replace('#/historique');
+    });
+  }
+
+  load();
+  const off = on((t, p) => {
+    if ((t === 'sale' && (p?.new?.id === id || p?.old?.id === id)) || t === 'refresh' || t === 'outbox') load();
+  });
+  return () => { off(); clearTimeout(expiry); };
+}
+
+return { render };
+})();
+// ===== views/historique.js =====
+__m['historique'] = (() => {
+// Historique commun : recherche, filtres, mise à jour en direct
+const { sb } = __m['supabase'];
+const { store, on, pendingMine, isUnread, loadReads, markAllRead } = __m['store'];
+const { toast } = __m['ui'];
+const { esc, icon, debounce, startOfDay, plural } = __m['ui'];
+const { topbar, saleCard, groupByDay } = __m['components'];
+
+const PAGE = 50;
+const CACHE_KEY = 'scierie-hist-cache';
+
+function render(root, { query }) {
+  const me = store.profile;
+  const mine = query.get('moi') === '1';
+  const f = { q: '', seller: mine ? me.id : '', species: '', grade: '', option: '', period: 'all', from: '', to: '' };
+  let limit = PAGE;
+  let known = new Set();
+  let seq = 0;
+  const PERIODS = [['all', 'Tout'], ['today', 'Aujourd’hui'], ['7', '7 jours'], ['30', '30 jours'], ['custom', 'Dates']];
+
+  root.innerHTML = `${topbar(mine ? 'Mes ventes' : 'Dernières ventes')}
+  <div class="searchbar">
+    ${icon('search')}
+    <input type="search" class="search-input" placeholder="Client, plaque, section, colis" enterkeyhint="search" aria-label="Rechercher">
+    <button class="filter-toggle" data-toggle aria-expanded="false">${icon('filter')}<span>Filtres</span><b class="fcount" hidden></b></button>
+  </div>
+  <section class="card filters" hidden>
+    <div class="filter-grid">
+      <label class="field"><span class="lbl">Vendeur</span>
+        <select class="input" name="seller"><option value="">Tous</option>${mine ? `<option value="${esc(me.id)}" selected>${esc(me.full_name)}</option>` : ''}</select></label>
+      <label class="field"><span class="lbl">Essence</span>
+        <select class="input" name="species"><option value="">Toutes</option>${store.species.map((s) => `<option>${esc(s.name)}</option>`).join('')}</select></label>
+      <label class="field"><span class="lbl">Choix</span>
+        <select class="input" name="grade"><option value="">Tous</option>${store.grades.map((g) => `<option>${esc(g.name)}</option>`).join('')}</select></label>
+      <label class="field"><span class="lbl">Option</span>
+        <select class="input" name="option"><option value="">Toutes</option>${store.options.map((o) => `<option>${esc(o.name)}</option>`).join('')}</select></label>
+    </div>
+    <div class="field"><span class="lbl">Période</span>
+      <div class="seg" role="group">${PERIODS.map(([v, l]) => `<button type="button" data-period="${v}" class="${v === 'all' ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    <div class="field-row" data-custom hidden>
+      <label class="field"><span class="lbl">Du</span><input class="input" type="date" name="from"></label>
+      <label class="field"><span class="lbl">Au</span><input class="input" type="date" name="to"></label>
+    </div>
+    <button class="btn btn-quiet" data-reset>Effacer les filtres</button>
+  </section>
+  <div class="list-head"><p class="pill-note" data-count></p>
+    <button type="button" class="btn btn-sm btn-ghost" data-allread hidden>Tout marquer comme vu</button></div>
+  <div class="hist-list" data-list><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+  <button class="btn btn-ghost btn-block" data-more hidden>Voir plus de ventes</button>`;
+
+  const $ = (s) => root.querySelector(s);
+  const list = $('[data-list]'), countEl = $('[data-count]'), moreBtn = $('[data-more]');
+  const panel = $('.filters'), toggle = $('[data-toggle]'), fcount = $('.fcount');
+
+  // Liste des vendeurs (y compris désactivés, pour l'historique)
+  sb.from('profiles').select('id, full_name').order('full_name').then(({ data }) => {
+    if (!data) return;
+    $('[name=seller]').innerHTML = '<option value="">Tous</option>' +
+      data.map((p) => `<option value="${esc(p.id)}" ${p.id === f.seller ? 'selected' : ''}>${esc(p.full_name)}</option>`).join('');
+  });
+
+  const isDefault = () => !f.q && !f.seller && !f.species && !f.grade && !f.option && f.period === 'all';
+  const activeFilters = () => [f.seller, f.species, f.grade, f.option, f.period !== 'all'].filter(Boolean).length;
+
+  function range() {
+    if (f.period === 'today') return [startOfDay(), null];
+    if (f.period === '7' || f.period === '30') {
+      const d = startOfDay(); d.setDate(d.getDate() - (Number(f.period) - 1)); return [d, null];
+    }
+    if (f.period === 'custom') {
+      const from = f.from ? new Date(`${f.from}T00:00:00`) : null;
+      let to = null;
+      if (f.to) { to = new Date(`${f.to}T00:00:00`); to.setDate(to.getDate() + 1); }
+      return [from, to];
+    }
+    return [null, null];
+  }
+
+  async function load({ live = false } = {}) {
+    const token = ++seq;
+    let q = sb.from('sales').select('*', { count: 'exact' })
+      .order('sold_at', { ascending: false }).order('id').range(0, limit - 1);
+    if (f.q) {
+      const t = f.q.replace(/[,()*%\\:"']/g, ' ').trim();
+      const key = t.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const low = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s*[x×*]\s*/g, 'x').replace(/\s+/g, ' ');
+      const ors = [`search_text.ilike.*${low}*`];
+      if (key) ors.push(`plate_key.ilike.*${key}*`);
+      if (t) q = q.or(ors.join(','));
+    }
+    if (f.seller) q = q.eq('seller_id', f.seller);
+    if (f.species) q = q.contains('items', [{ species: f.species }]);
+    if (f.grade) q = q.contains('items', [{ grade: f.grade }]);
+    if (f.option) q = q.contains('items', [{ options: [f.option] }]);
+    const [from, to] = range();
+    if (from) q = q.gte('sold_at', from.toISOString());
+    if (to) q = q.lt('sold_at', to.toISOString());
+
+    const { data, error, count } = await q;
+    if (token !== seq) return;
+    if (error) {
+      const cached = isDefault() ? JSON.parse(localStorage.getItem(CACHE_KEY) || '[]') : [];
+      draw(cached, null, { offline: true });
+      return;
+    }
+    if (isDefault()) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data.slice(0, PAGE))); } catch { /* plein */ } }
+    await loadReads(data);
+    if (token !== seq) return;
+    draw(data, count, { live });
+  }
+
+  function draw(rows, count, { offline = false, live = false } = {}) {
+    const pend = (isDefault() || f.seller === me.id) ? pendingMine() : [];
+    if (offline) countEl.textContent = navigator.onLine ? 'Chargement impossible. Dernières ventes connues :' : 'Hors ligne. Dernières ventes connues :';
+    else countEl.textContent = isDefault() ? plural(count ?? rows.length, 'vente au total', 'ventes au total')
+      : plural(count ?? rows.length, 'vente trouvée', 'ventes trouvées');
+
+    let html = pend.length
+      ? `<h3 class="day">En attente d’envoi</h3><div class="sale-list">${pend.map((s) => saleCard(s, { pending: true })).join('')}</div>` : '';
+    html += groupByDay(rows).map((g) => `<h3 class="day">${esc(g.label)}</h3>
+      <div class="sale-list">${g.rows.map((s) => saleCard(s, { isNew: live && !known.has(s.id), unread: isUnread(s) })).join('')}</div>`).join('');
+    if (!rows.length && !pend.length) {
+      html = `<div class="empty card">${isDefault()
+        ? 'Aucune vente enregistrée pour l’instant. La première apparaîtra ici.'
+        : 'Aucune vente ne correspond. Essayez un autre mot ou effacez les filtres.'}</div>`;
+    }
+    list.innerHTML = html;
+    const unread = rows.filter(isUnread).length;
+    const allBtn = root.querySelector('[data-allread]');
+    allBtn.hidden = !unread;
+    allBtn.textContent = unread > 1 ? `Marquer les ${unread} comme vues` : 'Marquer comme vue';
+    rows.forEach((r) => known.add(r.id));
+    moreBtn.hidden = !(count && count > rows.length);
+  }
+
+  const restart = () => {
+    limit = PAGE; known = new Set();
+    const n = activeFilters();
+    fcount.hidden = !n; fcount.textContent = n;
+    load();
+  };
+
+  $('.search-input').addEventListener('input', debounce((e) => { f.q = e.target.value.trim(); restart(); }, 300));
+  toggle.onclick = () => {
+    panel.hidden = !panel.hidden;
+    toggle.setAttribute('aria-expanded', String(!panel.hidden));
+  };
+  panel.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.name in f) { f[el.name] = el.value; restart(); }
+  });
+  panel.addEventListener('click', (e) => {
+    const pb = e.target.closest('[data-period]');
+    if (pb) {
+      f.period = pb.dataset.period;
+      panel.querySelectorAll('[data-period]').forEach((b) => b.classList.toggle('on', b === pb));
+      $('[data-custom]').hidden = f.period !== 'custom';
+      restart();
+    }
+    if (e.target.closest('[data-reset]')) {
+      Object.assign(f, { seller: '', species: '', grade: '', option: '', period: 'all', from: '', to: '' });
+      panel.querySelectorAll('select, input').forEach((i) => { i.value = ''; });
+      panel.querySelectorAll('[data-period]').forEach((b) => b.classList.toggle('on', b.dataset.period === 'all'));
+      $('[data-custom]').hidden = true;
+      restart();
+    }
+  });
+  moreBtn.onclick = () => { limit += PAGE; load(); };
+  const allBtn = root.querySelector('[data-allread]');
+  allBtn.onclick = async () => {
+    allBtn.disabled = true;
+    if (await markAllRead()) toast('Toutes les ventes sont marquées comme vues', 'ok');
+    else toast('Impossible pour le moment. Vérifiez la connexion.', 'error');
+    allBtn.disabled = false;
+  };
+
+  if (mine) { fcount.hidden = false; fcount.textContent = '1'; }
+  load();
+  const liveReload = debounce(() => load({ live: true }), 400);
+  return on((t) => { if (t === 'sale' || t === 'refresh' || t === 'outbox' || t === 'read') liveReload(); });
+}
+
+return { render };
+})();
+// ===== views/profil.js =====
+__m['profil'] = (() => {
+// Mon profil : nombre de ventes, mes ventes, mot de passe, installation, déconnexion
+const { sb } = __m['supabase'];
+const { store, on, pendingMine, clearProfileCache } = __m['store'];
+const { esc, icon, toast, dialog, initials, startOfDay, debounce, getTheme, setTheme } = __m['ui'];
+const { topbar } = __m['components'];
+const { changePassword } = __m['auth'];
+const { isIOS, isStandalone, disablePush } = __m['push'];
+const { SOUNDS, getSound, setSound, getVolume, setVolume, playSound } = __m['sons'];
+
+function render(root) {
+  const p = store.profile;
+  const chef = p.role === 'chef';
+  const installed = isStandalone();
+
+  root.innerHTML = `${topbar('Mon profil')}
+  <section class="card profile-card">
+    <div class="avatar">${esc(initials(p.full_name))}</div>
+    <div><h2 class="profile-name">${esc(p.full_name)}</h2>
+      <span class="role ${chef ? 'role-chef' : ''}">${chef ? 'Administrateur' : 'Employé'}</span>
+      ${p.email ? `<p class="profile-mail">${esc(p.email)}</p>` : ''}</div>
+  </section>
+  <div class="stats">
+    <div class="card stat"><b data-total>…</b><span>ventes enregistrées</span></div>
+    <div class="card stat"><b data-today>…</b><span>aujourd’hui</span></div>
+  </div>
+  <a class="btn btn-ghost btn-xl btn-block" href="#/historique?moi=1">${icon('list')} Voir uniquement mes ventes</a>
+  ${installed ? '' : `
+  <section class="card">
+    <h2>Installer sur ce téléphone</h2>
+    ${window.__installPrompt
+      ? `<p class="muted">Ajoutez l’application sur l’écran d’accueil pour l’ouvrir d’un seul geste.</p>
+         <button class="btn btn-primary btn-xl btn-block" data-install>${icon('phone')} Installer l’application</button>`
+      : isIOS()
+        ? '<p class="muted">Dans Safari, touchez le bouton <b>Partager</b>, puis <b>Sur l’écran d’accueil</b>. L’application s’ouvrira ensuite comme une vraie appli.</p>'
+        : '<p class="muted">Dans le menu du navigateur (⋮), choisissez <b>Installer l’application</b> ou <b>Ajouter à l’écran d’accueil</b>.</p>'}
+  </section>`}
+  ${chef ? `
+  <section class="card sound-card">
+    <h2>Son des nouvelles ventes</h2>
+    <p class="muted">Joué quand une vente arrive et que l’application est ouverte.</p>
+    <div class="sound-list" role="radiogroup" aria-label="Son">
+      ${Object.entries(SOUNDS).map(([k, v]) => `<button type="button" class="sound-opt ${getSound() === k ? 'on' : ''}" data-sound="${k}" role="radio" aria-checked="${getSound() === k}">${esc(v.label)}</button>`).join('')}
+    </div>
+    <label class="field vol-field"><span class="lbl">Volume <b data-vol-val>${getVolume()} %</b></span>
+      <input type="range" class="vol" min="0" max="100" step="5" value="${getVolume()}" data-vol></label>
+    <button type="button" class="btn btn-ghost btn-block" data-sound-test>▶ Écouter</button>
+    <p class="hint">Application fermée ou téléphone verrouillé : la notification utilise le son et le volume de notification du téléphone.</p>
+  </section>` : ''}
+  <section class="card">
+    <h2>Affichage</h2>
+    <div class="seg seg-3" role="group" aria-label="Thème">
+      ${[['auto', 'Automatique'], ['light', 'Clair'], ['dark', 'Sombre']].map(([v, l]) =>
+        `<button type="button" data-theme-set="${v}" class="${getTheme() === v ? 'on' : ''}" aria-pressed="${getTheme() === v}">${l}</button>`).join('')}
+    </div>
+    <p class="hint">Automatique : suit le réglage clair ou sombre du téléphone.</p>
+  </section>
+  <section class="card stack">
+    <h2>Mon compte</h2>
+    <button class="btn btn-ghost btn-block" data-pin>${icon('key')} Changer mon mot de passe</button>
+    <button class="btn btn-danger-ghost btn-block" data-logout>${icon('logout')} Se déconnecter</button>
+  </section>`;
+
+  async function loadStats() {
+    const [all, today] = await Promise.all([
+      sb.from('sales').select('id', { count: 'exact', head: true }).eq('seller_id', p.id),
+      sb.from('sales').select('id', { count: 'exact', head: true }).eq('seller_id', p.id).gte('sold_at', startOfDay().toISOString()),
+    ]);
+    const pend = pendingMine().length;
+    root.querySelector('[data-total]').textContent = all.error ? '—' : (all.count || 0) + pend;
+    root.querySelector('[data-today]').textContent = today.error ? '—' : (today.count || 0) + pend;
+  }
+  loadStats();
+
+  root.querySelectorAll('[data-sound]').forEach((b) => b.addEventListener('click', () => {
+    setSound(b.dataset.sound);
+    root.querySelectorAll('[data-sound]').forEach((x) => {
+      const onb = x === b; x.classList.toggle('on', onb); x.setAttribute('aria-checked', onb);
+    });
+    playSound();
+  }));
+  const vol = root.querySelector('[data-vol]');
+  vol?.addEventListener('input', () => { setVolume(vol.value); root.querySelector('[data-vol-val]').textContent = `${vol.value} %`; });
+  vol?.addEventListener('change', () => playSound());
+  root.querySelector('[data-sound-test]')?.addEventListener('click', () => playSound());
+
+  root.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    setTheme(b.dataset.themeSet);
+    root.querySelectorAll('[data-sound]').forEach((b) => b.addEventListener('click', () => {
+    setSound(b.dataset.sound);
+    root.querySelectorAll('[data-sound]').forEach((x) => {
+      const onb = x === b; x.classList.toggle('on', onb); x.setAttribute('aria-checked', onb);
+    });
+    playSound();
+  }));
+  const vol = root.querySelector('[data-vol]');
+  vol?.addEventListener('input', () => { setVolume(vol.value); root.querySelector('[data-vol-val]').textContent = `${vol.value} %`; });
+  vol?.addEventListener('change', () => playSound());
+  root.querySelector('[data-sound-test]')?.addEventListener('click', () => playSound());
+
+  root.querySelectorAll('[data-theme-set]').forEach((x) => {
+      const onb = x === b; x.classList.toggle('on', onb); x.setAttribute('aria-pressed', onb);
+    });
+  }));
+
+  root.querySelector('[data-install]')?.addEventListener('click', async () => {
+    const ev = window.__installPrompt;
+    if (!ev) return;
+    ev.prompt();
+    await ev.userChoice;
+    window.__installPrompt = null;
+  });
+
+  root.querySelector('[data-pin]').onclick = async () => {
+    const pw = await dialog({
+      title: 'Nouveau mot de passe',
+      message: 'Au moins 6 caractères.',
+      okLabel: 'Enregistrer',
+      input: { attrs: 'type="password" autocomplete="new-password" minlength="6"', placeholder: 'Nouveau mot de passe' },
+    });
+    if (pw === null) return;
+    if (pw.length < 6) return toast('Au moins 6 caractères.', 'error');
+    try { await changePassword(pw); toast('Mot de passe changé', 'ok'); }
+    catch (e) { toast(e.message, 'error', 5000); }
+  };
+
+  root.querySelector('[data-logout]').onclick = async () => {
+    const pend = pendingMine().length;
+    const ok = await dialog(pend
+      ? { title: 'Ventes pas encore envoyées',
+          message: `${pend} vente(s) attendent le réseau. Elles resteront sur ce téléphone et partiront à votre prochaine connexion.`,
+          okLabel: 'Me déconnecter quand même', danger: true }
+      : { title: 'Se déconnecter ?', message: 'Vous pourrez revenir avec votre adresse e-mail et votre mot de passe.', okLabel: 'Se déconnecter' });
+    if (!ok) return;
+    try { await disablePush(); } catch { /* sans importance */ }
+    clearProfileCache();
+    await sb.auth.signOut();
+    location.hash = '#/';
+    location.reload();
+  };
+
+  const reload = debounce(loadStats, 500);
+  return on((t, pl) => {
+    if ((t === 'sale' && (pl?.new?.seller_id === p.id || pl?.eventType === 'DELETE')) || t === 'outbox' || t === 'refresh') reload();
+  });
+}
+
+return { render };
+})();
+// ===== views/admin.js =====
+__m['admin'] = (() => {
+// Administration : équipe, essences, choix, code d'équipe, export
+const { sb } = __m['supabase'];
+const { store, on, loadRefs } = __m['store'];
+const { esc, icon, toast, dialog, initials, fmtDate, fmtTime, fmtLength, plural } = __m['ui'];
+const { topbar } = __m['components'];
+
+function render(root) {
+  root.innerHTML = `${topbar('Administration')}
+  <div class="admin-grid">
+    <section class="card admin-block">
+      <div><h2>Équipe</h2><p class="muted">Valider les nouveaux comptes, nommer un autre administrateur, ou supprimer le compte d’une personne qui a quitté l’entreprise.</p></div>
+      <div data-team><div class="skel"></div></div>
+    </section>
+    <div class="stack">
+      <section class="card admin-block">
+        <div><h2>Essences</h2><p class="muted">Les essences masquées n’apparaissent plus dans les nouvelles ventes.</p></div>
+        <div data-refs="species"></div>
+        <form class="add-row" data-add="species"><input class="input" placeholder="Ex. : Épicéa" maxlength="40" aria-label="Nouvelle essence">
+          <button class="btn btn-primary">Ajouter</button></form>
+      </section>
+      <section class="card admin-block">
+        <div><h2>Choix</h2></div>
+        <div data-refs="grades"></div>
+        <form class="add-row" data-add="grades"><input class="input" placeholder="Ex. : 4.0" maxlength="10" aria-label="Nouveau choix">
+          <button class="btn btn-primary">Ajouter</button></form>
+      </section>
+      <section class="card admin-block">
+        <div><h2>Options</h2><p class="muted">Ex. : TR, TA, MI-BOIS. Le vendeur peut en cocher plusieurs par produit.</p></div>
+        <div data-refs="wood_options"></div>
+        <form class="add-row" data-add="wood_options"><input class="input" placeholder="Nouvelle option" maxlength="20" aria-label="Nouvelle option">
+          <button class="btn btn-primary">Ajouter</button></form>
+      </section>
+      <section class="card admin-block">
+        <div><h2>Code d’équipe</h2><p class="muted">Demandé à chaque nouvel employé pour créer son profil.</p></div>
+        <div class="code-row"><span class="team-code" data-code>…</span><button class="btn btn-ghost" data-code-edit>Changer</button></div>
+      </section>
+      <section class="card admin-block">
+        <div><h2>Export Excel</h2><p class="muted">Les ventes de la période choisie, une ligne par produit (fichier CSV, s’ouvre avec Excel).</p></div>
+        <div class="seg" role="group" aria-label="Période d’export">
+          ${[['month', 'Ce mois-ci'], ['lastmonth', 'Mois dernier'], ['year', 'Cette année'], ['all', 'Tout'], ['custom', 'Dates']].map(([v, l]) =>
+            `<button type="button" data-xp="${v}" class="${v === 'month' ? 'on' : ''}">${l}</button>`).join('')}
+        </div>
+        <div class="field-row" data-xcustom hidden>
+          <label class="field"><span class="lbl">Du</span><input class="input" type="date" data-xfrom></label>
+          <label class="field"><span class="lbl">Au</span><input class="input" type="date" data-xto></label>
+        </div>
+        <button class="btn btn-primary btn-block" data-export>${icon('download')} Télécharger</button>
+      </section>
+    </div>
+  </div>`;
+
+  const $ = (s) => root.querySelector(s);
+
+  // ---------- Équipe ----------
+  async function loadTeam() {
+    const [pr, counts] = await Promise.all([
+      sb.from('profiles').select('*').order('full_name'),
+      sb.rpc('sales_count_by_seller'),
+    ]);
+    if (pr.error) { $('[data-team]').innerHTML = '<p class="empty">Chargement impossible.</p>'; return; }
+    const n = new Map((counts.data || []).map((c) => [c.seller_id, Number(c.n)]));
+    const waiting = pr.data.filter((u) => !u.approved);
+    const members = pr.data.filter((u) => u.approved);
+    const pendingHtml = waiting.length ? `<div class="pending-box">
+      <h3>${waiting.length > 1 ? `${waiting.length} comptes à valider` : '1 compte à valider'}</h3>
+      ${waiting.map((u) => `<div class="member" data-id="${esc(u.id)}" data-name="${esc(u.full_name)}">
+        <div class="avatar avatar-sm">${esc(initials(u.full_name))}</div>
+        <div class="member-info"><strong>${esc(u.full_name)}</strong>${u.email ? `<span class="member-mail">${esc(u.email)}</span>` : ''}</div>
+        <div class="member-actions">
+          <button class="btn btn-sm btn-primary" data-approve>${icon('check')} Valider</button>
+          <button class="btn btn-sm btn-danger-ghost" data-delete data-refuse>Refuser</button>
+        </div></div>`).join('')}
+    </div>` : '';
+    $('[data-team]').innerHTML = pendingHtml + members.map((u) => {
+      const self = u.id === store.profile.id;
+      const admin = u.role === 'chef';
+      return `<div class="member" data-id="${esc(u.id)}" data-name="${esc(u.full_name)}">
+        <div class="avatar avatar-sm">${esc(initials(u.full_name))}</div>
+        <div class="member-info"><strong>${esc(u.full_name)}</strong>
+          <span>${admin ? 'Administrateur' : 'Employé'}, ${plural(n.get(u.id) || 0, 'vente', 'ventes')}</span>
+          ${u.email ? `<span class="member-mail">${esc(u.email)}</span>` : ''}</div>
+        <div class="member-actions">${self ? '<span class="role">Vous</span>' : `
+          <button class="btn btn-sm btn-ghost" data-role="${admin ? 'employe' : 'chef'}">${admin ? 'Retirer les droits' : 'Nommer administrateur'}</button>
+          <button class="btn btn-sm btn-danger-ghost" data-delete>Supprimer</button>`}
+        </div></div>`;
+    }).join('');
+  }
+
+  $('[data-team]').addEventListener('click', async (e) => {
+    const rb = e.target.closest('[data-role]');
+    const db = e.target.closest('[data-delete]');
+    const ab = e.target.closest('[data-approve]');
+    if (!rb && !db && !ab) return;
+    const m = e.target.closest('.member');
+    const { id, name } = m.dataset;
+    if (ab) {
+      const { error } = await sb.from('profiles').update({ approved: true }).eq('id', id);
+      if (error) toast(error.message, 'error'); else toast(`${name} peut maintenant utiliser l’application`, 'ok');
+      loadTeam();
+      return;
+    }
+    if (rb) {
+      const toAdmin = rb.dataset.role === 'chef';
+      const ok = await dialog({ title: toAdmin ? 'Nommer administrateur ?' : 'Retirer les droits ?',
+        message: toAdmin ? `${name} pourra gérer l’équipe, modifier et supprimer des ventes, et recevra les notifications.`
+          : `${name} redeviendra employé.`, okLabel: 'Confirmer' });
+      if (!ok) return;
+      const { error } = await sb.from('profiles').update({ role: rb.dataset.role }).eq('id', id);
+      if (error) toast(error.message.includes('DERNIER_CHEF') ? 'Il faut garder au moins un administrateur.' : error.message, 'error', 5000);
+      else toast('Modification enregistrée', 'ok');
+    }
+    if (db) {
+      const refuse = db.hasAttribute('data-refuse');
+      const ok = await dialog(refuse
+        ? { title: `Refuser ${name} ?`, message: 'Ce compte sera supprimé. Si c’était une erreur, la personne pourra se réinscrire.', okLabel: 'Refuser', danger: true }
+        : { title: `Supprimer ${name} ?`,
+            message: 'Son compte sera supprimé définitivement : cette personne ne pourra plus se connecter. Ses ventes passées restent dans l’historique, à son nom. Action irréversible.',
+            okLabel: 'Supprimer le compte', danger: true });
+      if (!ok) return;
+      const { error } = await sb.rpc('delete_member', { target: id });
+      if (error) toast(error.message.includes('SOI_MEME') ? 'Vous ne pouvez pas supprimer votre propre compte.' : `Échec : ${error.message}`, 'error', 5000);
+      else toast(refuse ? `Inscription de ${name} refusée` : `Compte de ${name} supprimé`, 'ok');
+    }
+    loadTeam();
+  });
+
+  // ---------- Essences / choix ----------
+  function drawRefs() {
+    for (const [table, key] of [['species', 'species'], ['grades', 'grades'], ['wood_options', 'options']]) {
+      $(`[data-refs=${table}]`).innerHTML = store[key].map((r) => `
+        <div class="ref-row ${r.active ? '' : 'is-off'}"><span>${esc(r.name)}</span>
+          <button class="btn btn-sm btn-quiet" data-ref="${table}:${esc(r.id)}:${r.active ? '0' : '1'}">${r.active ? 'Masquer' : 'Afficher'}</button></div>`).join('')
+        || '<p class="muted">Aucun élément.</p>';
+    }
+  }
+  root.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-ref]');
+    if (!b) return;
+    const [table, id, to] = b.dataset.ref.split(':');
+    const { error } = await sb.from(table).update({ active: to === '1' }).eq('id', id);
+    if (error) return toast(error.message, 'error');
+    await loadRefs();
+  });
+  root.querySelectorAll('[data-add]').forEach((form) => form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const table = form.dataset.add;
+    const input = form.querySelector('input');
+    const name = input.value.trim().replace(/\s+/g, ' ');
+    if (!name) return;
+    const list = store[{ species: 'species', grades: 'grades', wood_options: 'options' }[table]];
+    const max = Math.max(0, ...list.map((r) => r.sort_order || 0));
+    const { error } = await sb.from(table).insert({ name: table === 'wood_options' ? name.toUpperCase() : name, sort_order: max + 1 });
+    if (error) return toast(error.code === '23505' ? `« ${name} » existe déjà.` : error.message, 'error');
+    input.value = '';
+    toast(`« ${name} » ajouté`, 'ok');
+    await loadRefs();
+  }));
+
+  // ---------- Code d'équipe ----------
+  async function loadCode() {
+    const { data } = await sb.from('settings').select('team_code').eq('id', 1).maybeSingle();
+    $('[data-code]').textContent = data?.team_code || '—';
+  }
+  $('[data-code-edit]').onclick = async () => {
+    const v = await dialog({ title: 'Nouveau code d’équipe', message: 'Les comptes existants ne sont pas touchés. Seuls les nouveaux profils devront utiliser ce code.',
+      okLabel: 'Enregistrer', input: { attrs: 'autocapitalize="characters" maxlength="30"', value: $('[data-code]').textContent } });
+    if (v === null) return;
+    const code = v.trim().toUpperCase();
+    if (code.length < 4) return toast('Au moins 4 caractères.', 'error');
+    const { error } = await sb.from('settings').update({ team_code: code }).eq('id', 1);
+    if (error) return toast(error.message, 'error');
+    toast('Code d’équipe changé', 'ok');
+    loadCode();
+  };
+
+  // ---------- Export CSV par période ----------
+  let xp = 'month';
+  root.querySelectorAll('[data-xp]').forEach((b) => b.addEventListener('click', () => {
+    xp = b.dataset.xp;
+    root.querySelectorAll('[data-xp]').forEach((x) => x.classList.toggle('on', x === b));
+    $('[data-xcustom]').hidden = xp !== 'custom';
+  }));
+  function exportRange() {
+    const now = new Date();
+    const d = (y, m, day = 1) => new Date(y, m, day);
+    if (xp === 'month') return { from: d(now.getFullYear(), now.getMonth()), to: null, name: now.toISOString().slice(0, 7) };
+    if (xp === 'lastmonth') { const f = d(now.getFullYear(), now.getMonth() - 1); return { from: f, to: d(now.getFullYear(), now.getMonth()), name: f.toISOString().slice(0, 7) }; }
+    if (xp === 'year') return { from: d(now.getFullYear(), 0), to: null, name: String(now.getFullYear()) };
+    if (xp === 'custom') {
+      const a = $('[data-xfrom]').value, b = $('[data-xto]').value;
+      if (!a || !b) return null;
+      const to = new Date(`${b}T00:00:00`); to.setDate(to.getDate() + 1);
+      return { from: new Date(`${a}T00:00:00`), to, name: `${a}_au_${b}` };
+    }
+    return { from: null, to: null, name: 'toutes' };
+  }
+  $('[data-export]').onclick = async (e) => {
+    const btn = e.currentTarget;
+    const range = exportRange();
+    if (!range) return toast('Choisissez les deux dates.', 'error');
+    btn.disabled = true; btn.classList.add('loading');
+    try {
+      const rows = [];
+      for (let from = 0; ; from += 1000) {
+        let qy = sb.from('sales').select('*').order('sold_at', { ascending: false }).range(from, from + 999);
+        if (range.from) qy = qy.gte('sold_at', range.from.toISOString());
+        if (range.to) qy = qy.lt('sold_at', range.to.toISOString());
+        const { data, error } = await qy;
+        if (error) throw error;
+        rows.push(...data);
+        if (data.length < 1000) break;
+      }
+      if (!rows.length) { toast('Aucune vente sur cette période.', 'info'); return; }
+      const q = (v) => {
+        let s = String(v ?? '');
+        if (/^[=+\-@]/.test(s)) s = `'${s}`;
+        return `"${s.replace(/"/g, '""')}"`;
+      };
+      const head = ['Date', 'Heure', 'Client', 'Plaque', 'N° produit', 'Section', 'Longueur (m)', 'Quantité', 'Essence', 'Choix', 'Options', 'Référence colis', 'Observation', 'Vendeur', 'Identifiant vente'];
+      const lines = [head.map(q).join(';'), ...rows.flatMap((s) => (s.items || []).map((it, i) => [fmtDate(s.sold_at), fmtTime(s.sold_at),
+        s.client_name, s.plate, i + 1, it.section, fmtLength(it.length_m, false), it.quantity, it.species, it.grade,
+        (it.options || []).join(' + '), it.package_ref, s.observation, s.seller_name, s.id].map(q).join(';')))];
+      const blob = new Blob([`\ufeff${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `ventes-${range.name}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast(`${plural(rows.length, 'vente exportée', 'ventes exportées')} (${lines.length - 1} lignes)`, 'ok');
+    } catch (err) {
+      toast(`Export impossible : ${err.message}`, 'error', 5000);
+    } finally { btn.disabled = false; btn.classList.remove('loading'); }
+  };
+
+  loadTeam(); drawRefs(); loadCode();
+  return on((t) => { if (t === 'refs') drawRefs(); if (t === 'sale') loadTeam(); });
+}
+
+return { render };
+})();
+// ===== views/stats.js =====
+__m['stats'] = (() => {
+// =====================================================================
+//  Statistiques (toute l'équipe) : ventes, pièces, volume en m³,
+//  comparaison avec la période précédente, répartitions.
+//  L'administrateur peut toucher un vendeur pour voir son détail.
+// =====================================================================
+const { sb } = __m['supabase'];
+const { store, on } = __m['store'];
+const { esc, debounce, startOfDay, plural } = __m['ui'];
+const { topbar, swatch } = __m['components'];
+
+const PERIODS = [['today', 'Aujourd’hui'], ['7', '7 jours'], ['30', '30 jours'], ['year', 'Cette année']];
+const SHOWN = 4; // lignes visibles avant « Voir plus »
+
+// Volume d'un produit : section en mm (ex. 27x150) × longueur (m) × quantité
+function volumeM3(it) {
+  const m = String(it.section || '').match(/^(\d+(?:[.,]\d+)?)x(\d+(?:[.,]\d+)?)$/);
+  if (!m) return 0;
+  const a = parseFloat(m[1].replace(',', '.')) / 1000;
+  const b = parseFloat(m[2].replace(',', '.')) / 1000;
+  return a * b * (Number(it.length_m) || 0) * (Number(it.quantity) || 0);
+}
+const m3 = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const int = (v) => v.toLocaleString('fr-FR');
+
+// Période choisie + période précédente de même durée (pour comparer)
+function periodRange(period) {
+  const now = new Date();
+  const from = startOfDay();
+  let prevFrom, prevTo, label;
+  if (period === 'today') {
+    prevFrom = new Date(from); prevFrom.setDate(prevFrom.getDate() - 1);
+    prevTo = new Date(now); prevTo.setDate(prevTo.getDate() - 1);
+    label = 'hier à la même heure';
+  } else if (period === 'year') {
+    from.setMonth(0, 1);
+    prevFrom = new Date(from); prevFrom.setFullYear(from.getFullYear() - 1);
+    prevTo = new Date(now); prevTo.setFullYear(now.getFullYear() - 1);
+    label = 'même période l’an dernier';
+  } else {
+    const n = Number(period);
+    from.setDate(from.getDate() - (n - 1));
+    prevFrom = new Date(from); prevFrom.setDate(prevFrom.getDate() - n);
+    prevTo = new Date(from);
+    label = `${n} jours précédents`;
+  }
+  return { from, to: null, prevFrom, prevTo, label };
+}
+
+async function fetchSales(from, to, sellerId = null, cols = 'id, client_name, plate, seller_id, seller_name, sold_at, created_at, items, total_quantity, observation') {
+  const rows = [];
+  for (let i = 0; i < 20; i++) { // jusqu'à 20 000 ventes
+    let q = sb.from('sales').select(cols).gte('sold_at', from.toISOString())
+      .order('sold_at', { ascending: false }).range(i * 1000, i * 1000 + 999);
+    if (to) q = q.lt('sold_at', to.toISOString());
+    if (sellerId) q = q.eq('seller_id', sellerId);
+    const { data, error } = await q;
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < 1000) break;
+  }
+  return rows;
+}
+
+function addTo(map, key, pieces, vol, sales = 0, id = null) {
+  const e = map.get(key) || { pieces: 0, vol: 0, sales: 0, id };
+  e.pieces += pieces; e.vol += vol; e.sales += sales;
+  map.set(key, e);
+}
+
+function summarize(rows) {
+  const r = { sales: rows.length, pieces: 0, vol: 0, bySpecies: new Map(), byGrade: new Map(), byOption: new Map(),
+    bySection: new Map(), bySeller: new Map(), byClient: new Map() };
+  for (const s of rows) {
+    let sp = 0, sv = 0;
+    for (const it of s.items || []) {
+      const q = Number(it.quantity) || 0, v = volumeM3(it);
+      sp += q; sv += v;
+      addTo(r.bySpecies, it.species, q, v);
+      addTo(r.byGrade, `Choix ${it.grade}`, q, v);
+      addTo(r.bySection, it.section, q, v);
+      for (const o of it.options || []) addTo(r.byOption, o, q, v);
+    }
+    r.pieces += sp; r.vol += sv;
+    addTo(r.bySeller, s.seller_name, sp, sv, 1, s.seller_id);
+    addTo(r.byClient, s.client_name, sp, sv, 1);
+  }
+  return r;
+}
+
+// « +12 % » par rapport à la période précédente
+function delta(cur, prev) {
+  if (!prev) return cur ? '<span class="delta up">nouveau</span>' : '<span class="delta">=</span>';
+  const p = Math.round(((cur - prev) / prev) * 100);
+  if (p === 0) return '<span class="delta">=</span>';
+  return `<span class="delta ${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲ +' : '▼ '}${p} %</span>`;
+}
+
+function kpisHtml(cur, prev, label) {
+  const k = (v, txt, pv, fmt = int) => `<div class="card kpi"><b>${fmt(v)}</b><span>${txt}</span>${prev ? delta(v, pv) : ''}</div>`;
+  return `<div class="kpis">
+    ${k(cur.sales, cur.sales > 1 ? 'ventes' : 'vente', prev?.sales)}
+    ${k(cur.pieces, 'pièces', prev?.pieces)}
+    ${k(cur.vol, 'm³ estimés', prev?.vol, m3)}
+  </div>${prev ? `<p class="kpi-note">Comparé aux ${esc(label)}</p>` : ''}`;
+}
+
+// Liste en barres : 4 lignes, puis « Voir plus »
+function barList(title, map, { withVol = true, sales = false, sw = false, link = false } = {}) {
+  const rows = [...map.entries()].sort((a, b) => b[1].pieces - a[1].pieces);
+  if (!rows.length) return '';
+  const max = Math.max(...rows.map(([, e]) => e.pieces), 1);
+  const row = ([k, e], i) => {
+    const clickable = link && e.id;
+    const tag = clickable ? 'a' : 'div';
+    return `<${tag} class="bar-row ${clickable ? 'is-link' : ''} ${i >= SHOWN ? 'bar-more' : ''}" ${clickable ? `href="#/vendeur/${esc(e.id)}"` : ''} ${i >= SHOWN ? 'hidden' : ''}>
+      <div class="bar-label">${sw ? swatch(k) : ''}<span>${esc(k || '—')}</span></div>
+      <div class="bar-track"><i style="width:${Math.max(2, (e.pieces / max) * 100)}%"></i></div>
+      <div class="bar-val"><b>${int(e.pieces)}</b> pcs${withVol ? `<small>${m3(e.vol)} m³</small>` : ''}${sales ? `<small>${plural(e.sales, 'vente', 'ventes')}</small>` : ''}</div>
+      ${clickable ? '<span class="bar-go" aria-hidden="true">›</span>' : ''}
+    </${tag}>`;
+  };
+  return `<section class="card stat-block"><h2>${esc(title)}</h2>
+    ${rows.map(row).join('')}
+    ${rows.length > SHOWN ? `<button type="button" class="btn btn-sm btn-quiet more-btn" data-more="${rows.length - SHOWN}">Voir plus (${rows.length - SHOWN})</button>` : ''}
+  </section>`;
+}
+
+// Bouton « Voir plus / Voir moins » (délégué)
+function bindMore(el) {
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-more]');
+    if (!b) return;
+    const block = b.closest('.stat-block');
+    const open = b.dataset.open === '1';
+    block.querySelectorAll('.bar-more').forEach((r) => { r.hidden = open; });
+    b.dataset.open = open ? '0' : '1';
+    b.textContent = open ? `Voir plus (${b.dataset.more})` : 'Voir moins';
+  });
+}
+
+// Histogramme par heure / jour / mois
+function colsHtml(period, from, rows) {
+  const cols = [];
+  if (period === 'today') {
+    for (let h = 6; h <= 20; h++) cols.push({ key: h, label: `${h}h`, show: h % 2 === 0, v: 0 });
+  } else if (period === 'year') {
+    for (let m = 0; m <= new Date().getMonth(); m++) {
+      cols.push({ key: m, label: new Date(2000, m, 1).toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''), show: true, v: 0 });
+    }
+  } else {
+    const n = Number(period);
+    for (let i = 0; i < n; i++) {
+      const d = new Date(from); d.setDate(d.getDate() + i);
+      cols.push({ key: d.toDateString(), label: n === 7 ? d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '') : String(d.getDate()),
+        show: n === 7 || i % 5 === 0 || i === n - 1, v: 0 });
+    }
+  }
+  const idx = new Map(cols.map((c, i) => [c.key, i]));
+  for (const s of rows) {
+    const d = new Date(s.sold_at);
+    const k = period === 'today' ? Math.min(20, Math.max(6, d.getHours())) : period === 'year' ? d.getMonth() : startOfDay(d).toDateString();
+    const i = idx.get(k);
+    if (i != null) cols[i].v += s.total_quantity || 0;
+  }
+  const max = Math.max(...cols.map((c) => c.v), 1);
+  return `<section class="card stat-block">
+    <h2>Pièces vendues ${period === 'today' ? 'par heure' : period === 'year' ? 'par mois' : 'par jour'}</h2>
+    <div class="cols" role="img" aria-label="Histogramme des pièces vendues">
+      ${cols.map((c) => `<div class="col" title="${esc(c.label)} : ${c.v} pièces">
+        <i style="height:${c.v ? Math.max(3, (c.v / max) * 100) : 0}%"></i><span>${c.show ? esc(c.label) : ''}</span></div>`).join('')}
+    </div>
+  </section>`;
+}
+
+const periodSeg = (period) => `<div class="seg seg-4" role="group" aria-label="Période">
+  ${PERIODS.map(([v, l]) => `<button type="button" data-p="${v}" class="${v === period ? 'on' : ''}">${l}</button>`).join('')}
+</div>`;
+
+function render(root) {
+  const admin = store.profile.role === 'chef';
+  let period = '30';
+  let seq = 0;
+  root.innerHTML = `${topbar('Statistiques')}
+  ${periodSeg(period)}
+  <div class="stats-body" data-body><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>`;
+  const body = root.querySelector('[data-body]');
+  bindMore(body);
+
+  async function load() {
+    const token = ++seq;
+    const { from, prevFrom, prevTo, label } = periodRange(period);
+    let rows, prevRows;
+    try {
+      [rows, prevRows] = await Promise.all([
+        fetchSales(from, null),
+        fetchSales(prevFrom, prevTo, null, 'items, total_quantity'),
+      ]);
+    } catch {
+      if (token === seq) body.innerHTML = `<p class="empty card">${navigator.onLine ? 'Chargement impossible.' : 'Hors ligne : statistiques disponibles au retour du réseau.'}</p>`;
+      return;
+    }
+    if (token !== seq) return;
+    const cur = summarize(rows), prev = summarize(prevRows);
+    if (!rows.length) {
+      body.innerHTML = `${kpisHtml(cur, prev, label)}<p class="empty card">Aucune vente sur cette période.</p>`;
+      return;
+    }
+    body.innerHTML = `
+    ${kpisHtml(cur, prev, label)}
+    ${colsHtml(period, from, rows)}
+    <div class="stat-grid">
+      ${barList('Par essence', cur.bySpecies, { sw: true })}
+      ${barList('Par vendeur', cur.bySeller, { sales: true, withVol: false, link: admin })}
+      ${barList('Par choix', cur.byGrade)}
+      ${barList('Par section', cur.bySection)}
+      ${barList('Par option', cur.byOption)}
+      ${barList('Meilleurs clients', cur.byClient, { sales: true, withVol: false })}
+    </div>
+    ${admin ? '<p class="hint stat-note">Touchez un vendeur pour voir le détail de ses ventes.</p>' : ''}
+    <p class="hint stat-note">Volume estimé : section en millimètres × longueur × quantité.</p>`;
+  }
+
+  root.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => {
+    period = b.dataset.p;
+    root.querySelectorAll('[data-p]').forEach((x) => x.classList.toggle('on', x === b));
+    body.innerHTML = '<div class="skel"></div><div class="skel"></div>';
+    load();
+  }));
+  load();
+  const reload = debounce(load, 800);
+  return on((t) => { if (t === 'sale' || t === 'refresh') reload(); });
+}
+
+return { PERIODS, volumeM3, m3, int, periodRange, fetchSales, summarize, kpisHtml, barList, bindMore, colsHtml, periodSeg, render };
+})();
+// ===== views/vendeur.js =====
+__m['vendeur'] = (() => {
+// =====================================================================
+//  Détail d'un vendeur (administrateur) : ce qu'il a vendu aujourd'hui,
+//  sur 7 jours, 30 jours ou l'année, avec la liste de ses ventes.
+// =====================================================================
+const { sb } = __m['supabase'];
+const { on, isUnread, loadReads } = __m['store'];
+const { esc, debounce, initials, plural } = __m['ui'];
+const { topbar, saleCard, groupByDay } = __m['components'];
+const { periodSeg, periodRange, fetchSales, summarize, kpisHtml, colsHtml, barList, bindMore } = __m['stats'];
+
+function render(root, { params: [id] }) {
+  let period = 'today';
+  let seq = 0;
+  root.innerHTML = `${topbar('Vendeur')}
+  <section class="card profile-card" data-head><div class="skel"></div></section>
+  ${periodSeg(period)}
+  <div class="stats-body" data-body><div class="skel"></div><div class="skel"></div></div>`;
+  const body = root.querySelector('[data-body]');
+  const head = root.querySelector('[data-head]');
+  bindMore(body);
+
+  sb.from('profiles').select('full_name, email, role').eq('id', id).maybeSingle().then(({ data }) => {
+    if (!data) { head.innerHTML = '<p class="muted">Compte supprimé : ses ventes restent visibles ci-dessous.</p>'; return; }
+    root.querySelector('.topbar-title').textContent = data.full_name;
+    head.innerHTML = `<div class="avatar">${esc(initials(data.full_name))}</div>
+      <div><h2 class="profile-name">${esc(data.full_name)}</h2>
+      <span class="role ${data.role === 'chef' ? 'role-chef' : ''}">${data.role === 'chef' ? 'Administrateur' : 'Employé'}</span>
+      ${data.email ? `<p class="profile-mail">${esc(data.email)}</p>` : ''}</div>`;
+  });
+
+  async function load() {
+    const token = ++seq;
+    const { from, prevFrom, prevTo, label } = periodRange(period);
+    let rows, prevRows;
+    try {
+      [rows, prevRows] = await Promise.all([
+        fetchSales(from, null, id),
+        fetchSales(prevFrom, prevTo, id, 'items, total_quantity'),
+      ]);
+      await loadReads(rows);
+    } catch {
+      if (token === seq) body.innerHTML = '<p class="empty card">Chargement impossible pour le moment.</p>';
+      return;
+    }
+    if (token !== seq) return;
+    const cur = summarize(rows), prev = summarize(prevRows);
+    body.innerHTML = `
+    ${kpisHtml(cur, prev, label)}
+    ${rows.length ? `
+      ${period !== 'today' ? colsHtml(period, from, rows) : ''}
+      <div class="stat-grid">
+        ${barList('Par essence', cur.bySpecies, { sw: true })}
+        ${barList('Par section', cur.bySection)}
+        ${barList('Par choix', cur.byGrade)}
+        ${barList('Ses clients', cur.byClient, { sales: true, withVol: false })}
+      </div>
+      <h2 class="pill-title">${plural(rows.length, 'vente', 'ventes')} sur la période</h2>
+      <div class="hist-list">
+        ${groupByDay(rows).map((g) => `<h3 class="day">${esc(g.label)}</h3>
+          <div class="sale-list">${g.rows.map((s) => saleCard(s, { unread: isUnread(s) })).join('')}</div>`).join('')}
+      </div>` : '<p class="empty card">Aucune vente sur cette période.</p>'}`;
+  }
+
+  root.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => {
+    period = b.dataset.p;
+    root.querySelectorAll('[data-p]').forEach((x) => x.classList.toggle('on', x === b));
+    body.innerHTML = '<div class="skel"></div><div class="skel"></div>';
+    load();
+  }));
+  load();
+  const reload = debounce(load, 800);
+  return on((t, p) => { if ((t === 'sale' && (p?.new?.seller_id === id || p?.eventType === 'DELETE')) || t === 'refresh' || t === 'read') reload(); });
+}
+
+return { render };
+})();
+// ===== app.js =====
+__m['app'] = (() => {
+// =====================================================================
+//  Démarrage et navigation
+// =====================================================================
+const { CONFIG } = __m['config'];
+const { sb, configured } = __m['supabase'];
+const { store, on, initStore } = __m['store'];
+const { updateNet } = __m['components'];
+const { esc, toast, applyTheme } = __m['ui'];
+const { refreshPush } = __m['push'];
+const { unlockAudio, playSound } = __m['sons'];
+const Connexion = __m['connexion'];
+const Accueil = __m['accueil'];
+const Vente = __m['vente'];
+const Detail = __m['detail'];
+const Historique = __m['historique'];
+const Profil = __m['profil'];
+const Notifications = __m['notifications'];
+const Admin = __m['admin'];
+const Stats = __m['stats'];
+const Vendeur = __m['vendeur'];
+
+const app = document.getElementById('app');
+
+const ROUTES = [
+  { re: /^\/$/, view: Accueil },
+  { re: /^\/nouvelle$/, view: Vente },
+  { re: /^\/modifier\/([\w-]+)$/, view: Vente },   // droits vérifiés par l'écran et par la base
+  { re: /^\/vente\/([\w-]+)$/, view: Detail },
+  { re: /^\/historique$/, view: Historique },
+  { re: /^\/profil$/, view: Profil },
+  { re: /^\/notifications$/, view: Notifications, chef: true },
+  { re: /^\/admin$/, view: Admin, chef: true },
+  { re: /^\/stats$/, view: Stats },
+  { re: /^\/vendeur\/([\w-]+)$/, view: Vendeur, chef: true },
+];
+
+let cleanup = null;
+let depth = 0;
+
+function route() {
+  const raw = location.hash.replace(/^#/, '') || '/';
+  const [path, qs = ''] = raw.split('?');
+  const r = ROUTES.find((x) => x.re.test(path));
+  if (!r || (r.chef && store.profile.role !== 'chef')) { location.replace('#/'); return; }
+  if (cleanup) { try { cleanup(); } catch (e) { console.error(e); } cleanup = null; }
+  const view = document.createElement('div');
+  view.className = 'view';
+  app.replaceChildren(view);
+  window.scrollTo(0, 0);
+  const ret = r.view.render(view, { params: path.match(r.re).slice(1), query: new URLSearchParams(qs) });
+  cleanup = typeof ret === 'function' ? ret : null;
+  updateNet();
+}
+
+function screen(title, text, actions = '') {
+  app.innerHTML = `<main class="auth"><section class="card">
+    <h1 class="screen-title">${esc(title)}</h1><p class="muted">${text}</p>${actions}</section></main>`;
+}
+
+function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW', e));
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data?.type === 'open' && e.data.hash) location.hash = e.data.hash;
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__installPrompt = e; });
+
+applyTheme();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme());
+
+async function boot() {
+  document.title = `${CONFIG.NOM_SCIERIE} · Ventes`;
+  if (!configured) {
+    screen('Configuration à terminer',
+      'Renseignez l’adresse et la clé de votre projet Supabase dans <b>js/config.js</b>, puis rechargez la page. Tout est expliqué dans le fichier <b>README.md</b>.');
+    return;
+  }
+  registerSW();
+
+  const { data: { session } } = await sb.auth.getSession();
+
+  // Retour depuis le lien « mot de passe oublié » reçu par e-mail
+  if (session && window.__recovery) {
+    history.replaceState(null, '', location.pathname);
+    Connexion.render(app, { mode: 'reset', onDone: () => { location.hash = '#/'; location.reload(); } });
+    return;
+  }
+  sb.auth.onAuthStateChange((ev) => {
+    if (ev === 'PASSWORD_RECOVERY') Connexion.render(app, { mode: 'reset', onDone: () => { location.hash = '#/'; location.reload(); } });
+  });
+
+  if (!session) {
+    Connexion.render(app, { onDone: () => { location.hash = '#/'; location.reload(); } });
+    return;
+  }
+
+  await initStore(session);
+  if (!store.profile) {
+    screen(navigator.onLine ? 'Compte introuvable' : 'Pas de connexion',
+      navigator.onLine ? 'Ce compte n’existe plus ou a été supprimé par l’administrateur.' : 'Pas de connexion Internet pour charger votre profil.',
+      `<div class="stack gap-top"><button class="btn btn-primary btn-xl" onclick="location.reload()">Réessayer</button>
+       <button class="btn btn-quiet" id="lo">Se déconnecter</button></div>`);
+    document.getElementById('lo').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    return;
+  }
+  if (!store.profile.active) {
+    screen('Compte désactivé', 'Votre compte a été désactivé par l’administrateur.',
+      `<button class="btn btn-ghost btn-xl btn-block gap-top" id="lo">Se déconnecter</button>`);
+    document.getElementById('lo').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    return;
+  }
+
+  if (!store.profile.approved) {
+    screen('Compte en attente de validation',
+      `Bonjour ${esc(store.profile.full_name.split(' ')[0])}. Votre compte est bien créé : l’administrateur doit maintenant le valider. Vous pouvez fermer l’application et revenir plus tard, cet écran se met à jour tout seul.`,
+      `<div class="stack gap-top"><button class="btn btn-primary btn-xl" onclick="location.reload()">Vérifier à nouveau</button>
+       <button class="btn btn-quiet" id="lo">Se déconnecter</button></div>`);
+    document.getElementById('lo').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    setInterval(async () => {
+      const { data } = await sb.from('profiles').select('approved').eq('id', store.profile.id).maybeSingle();
+      if (data?.approved) location.reload();
+    }, 15000);
+    return;
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-back]')) return;
+    e.preventDefault();
+    if (depth > 1) history.back(); else location.replace('#/');
+  });
+  window.addEventListener('hashchange', () => { depth++; route(); });
+  on((type, p) => {
+    if (type === 'net' || type === 'outbox') updateNet();
+    // Administrateur, application ouverte : petit bandeau en plus de la notification
+    if (type === 'sale' && p?.eventType === 'INSERT' && store.profile.role === 'chef'
+        && p.new?.seller_id !== store.profile.id) {
+      toast(`Nouvelle vente : ${p.new.client_name}, par ${p.new.seller_name}`, 'info', 4500);
+      if (!document.hidden) playSound();
+    }
+  });
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') location.reload(); });
+  if (store.profile.role === 'chef') { refreshPush(); unlockAudio(); }
+
+  depth = 1;
+  route();
+}
+
+boot().catch((e) => {
+  console.error(e);
+  screen('Démarrage impossible', esc(e.message || String(e)),
+    '<button class="btn btn-primary btn-xl btn-block gap-top" onclick="location.reload()">Réessayer</button>');
+});
+
+return {  };
+})();
+  </script>
+</body>
+</html>
