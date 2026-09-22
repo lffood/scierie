@@ -3,8 +3,8 @@
 // =====================================================================
 window.SCIERIE_CONFIG = {
   // Supabase > Project Settings > API
-  SUPABASE_URL: 'https://VOTRE-PROJET.supabase.co',
-  SUPABASE_ANON_KEY: 'VOTRE-CLE-ANON-PUBLIQUE',
+  SUPABASE_URL: 'https://jqtuclhxpyjqztdlehpl.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdHVjbGh4cHlqcXp0ZGxlaHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxMDA1OTYsImV4cCI6MjEwNTY3NjU5Nn0.PQYQEfLTDxVLTkdm1tL8M3XiOEIX804RDtgcKM8mB4c',
 
   // Clé publique VAPID (générée avec outils/cles-vapid.html)
   VAPID_PUBLIC_KEY: '',
