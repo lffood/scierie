@@ -1,17 +1,30 @@
 {
-  "name": "Scierie · Ventes",
-  "short_name": "Scierie",
-  "description": "Registre des ventes de bois de la scierie",
+  "name": "SDC · Ventes",
+  "short_name": "SDC",
+  "description": "SDC, Les Scieries du Centre : registre des ventes de bois",
   "lang": "fr",
   "start_url": "./#/",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1d3a2e",
-  "theme_color": "#1d3a2e",
+  "background_color": "#fbfaf6",
+  "theme_color": "#26533f",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

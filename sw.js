@@ -2,7 +2,7 @@
 //  Service worker : fonctionnement hors ligne + notifications push
 //  ⚠ Après chaque modification des fichiers, augmentez VERSION.
 // =====================================================================
-const VERSION = 'scierie-v8';
+const VERSION = 'sdc-v9';
 const CDN_CACHE = 'scierie-cdn-v1';
 const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './badge-96.png', './fond.jpg'];
 
